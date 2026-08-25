@@ -26,6 +26,16 @@ var CONFIG = {
         { name: "Olivia",  hair: "#6b4226", shirt: "#9b59d0" },
         { name: "Spencer", hair: "#5a3a1e", shirt: "#3fae5f", boy: true }
       ]
+    },
+    {
+      id: "olivia", name: "Olivia", emoji: "🦑",
+      module: "latin",                      // learns: Kraken Latin 1 (age 13)
+      saveKey: "craftworlds_save_olivia",
+      startLevel: 5,                        // strong reader: skip the baby worlds
+      helpers: [
+        { name: "Penelope", hair: "#8a5433", shirt: "#3ba7d9" },
+        { name: "Spencer",  hair: "#5a3a1e", shirt: "#3fae5f", boy: true }
+      ]
     }
   ],
 

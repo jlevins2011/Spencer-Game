@@ -4,9 +4,10 @@
    A small pluggable system. Modules register themselves and the
    game asks the engine for challenges at gameplay moments
    ("kind" describes the moment: pick / spell / sentence).
-   Reading (Spencer) and spelling (Penelope) modules exist; a
-   future math module would register the same way, and each
-   player profile in CONFIG.PLAYERS names the module it uses.
+   Reading (Spencer), spelling (Penelope), and Latin (Olivia)
+   modules exist; a future math module would register the same
+   way, and each player profile in CONFIG.PLAYERS names the
+   module it uses.
 
    The engine also owns adaptive difficulty:
    - tierScore rises on clean wins, falls on misses

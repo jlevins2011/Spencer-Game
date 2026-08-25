@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   NPCs — Olivia and Penelope (helpers), Daddy, Mommy with her
+   NPCs — siblings as helpers, Daddy, Mommy with her
    teacup, and Maggie the beagle. Helpers give reading quests;
    parents give SUPER CHALLENGES with legendary rewards.
    ============================================================ */

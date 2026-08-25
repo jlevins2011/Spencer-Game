@@ -86,7 +86,10 @@ var Reports = (function () {
     phonics: "Phonics (sounding out)",
     sentences: "Sentence reading",
     spot: "Spotting correct spellings",
-    spelling: "Spelling words out"
+    spelling: "Spelling words out",
+    "latin-vocab": "Latin vocabulary (Kraken Latin 1)",
+    "latin-spell": "Spelling Latin words",
+    "latin-read": "Latin sentence meaning"
   };
 
   function buildTextReport() {
