@@ -16,9 +16,10 @@ var Save = (function () {
         pickTier: 0,                 // 0 wood, 1 stone, 2 iron, 3 diamond
         world: "meadow",
         inventory: {},               // blockName -> count
-        tools: {}                    // special tools from Daddy: drill, thunder
+        tools: {}                    // Daddy: drill, thunder; Mommy: furnace, lantern
       },
       daddy: { wins: 0 },            // super-challenge wins
+      mommy: { wins: 0 },
       reading: { tier: 0, tierWins: 0, struggle: 0 },
       spelling: { tier: 0, tierWins: 0, struggle: 0 },
       worlds: {},                    // worldId -> { edits: {"x,y,z": blockId} }
@@ -50,6 +51,8 @@ var Save = (function () {
           data = Object.assign(freshData(), parsed);
           data.player = Object.assign(freshData().player, parsed.player);
           data.stats = Object.assign(freshData().stats, parsed.stats);
+          data.daddy = Object.assign(freshData().daddy, parsed.daddy || {});
+          data.mommy = Object.assign(freshData().mommy, parsed.mommy || {});
           if (!data.player.tools) data.player.tools = {};
         }
       }

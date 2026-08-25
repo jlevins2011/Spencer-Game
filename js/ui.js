@@ -129,6 +129,8 @@ var UI = (function () {
       "<span class='inv-tool'>⛏️ " + pickNames[p.pickTier] + "</span>" +
       (p.tools.drill ? "<span class='inv-tool legendary'>🌀 Voidbreaker Drill</span>" : "") +
       (p.tools.thunder ? "<span class='inv-tool legendary'>⚡ Thunder Pick</span>" : "") +
+      (p.tools.furnace ? "<button class='inv-tool legendary inv-station'>🔥 Magic Furnace</button>" : "") +
+      (p.tools.lantern ? "<button class='inv-tool legendary inv-station'>🕯️ Lantern Kit</button>" : "") +
       "</div>";
 
     openOverlay(
@@ -140,12 +142,22 @@ var UI = (function () {
       "<button class='big-btn' id='inv-close'>BACK TO THE GAME</button>"
     );
     $("inv-close").addEventListener("pointerdown", closeOverlay);
+    document.querySelectorAll(".inv-station").forEach(function (b) {
+      b.addEventListener("pointerdown", function (e) {
+        e.stopPropagation();
+        closeOverlay();
+        doSmelt();
+      });
+    });
     document.querySelectorAll(".inv-slot").forEach(function (slot) {
       slot.addEventListener("pointerdown", function () {
         var item = slot.getAttribute("data-item");
         if (ITEM_TO_BLOCK[item] === undefined) {
           GameAudio.sfx.pop();
           toast(item === "meat" ? "🍖 Yummy! Someone might want this for dinner..." :
+            item === "cooked meat" ? "🍗 Cooked and ready — somebody's hungry!" :
+            item === "iron ore" ? "⛓️ Raw iron ore — smelt it in Mommy's furnace!" :
+            item === "iron" ? "⛓️ Iron ingot — craft an iron pickaxe with this!" :
             "You can't place " + item + " — but it might be useful!");
           return;
         }
@@ -186,6 +198,56 @@ var UI = (function () {
   function updateCraftButton() {
     var b = $("btn-craft");
     b.style.display = availableCraft() ? "block" : "none";
+    var s = $("btn-smelt");
+    if (s) s.style.display = availableSmelts().length ? "block" : "none";
+  }
+
+  /* ---------------- Mommy's furnace / lantern recipes ---------------- */
+  var SMELTS = [
+    { need: "furnace", needs: { "iron ore": 1, coal: 1 }, gives: { iron: 1 }, name: "iron ingot", icon: "⛓️" },
+    { need: "furnace", needs: { sand: 1, coal: 1 }, gives: { glass: 1 }, name: "glass", icon: "🪟" },
+    { need: "furnace", needs: { meat: 1, coal: 1 }, gives: { "cooked meat": 1 }, name: "cooked meat", icon: "🍗" },
+    { need: "lantern", needs: { wood: 1, coal: 1 }, gives: { torch: 4 }, name: "4 torches", icon: "🕯️" }
+  ];
+
+  function availableSmelts() {
+    var p = Save.data.player;
+    var inv = p.inventory;
+    return SMELTS.filter(function (r) {
+      if (!p.tools[r.need]) return false;
+      return Object.keys(r.needs).every(function (k) { return (inv[k] || 0) >= r.needs[k]; });
+    });
+  }
+
+  function doSmelt() {
+    var recipes = availableSmelts();
+    if (!recipes.length) { toast("Need coal plus ore (or wood) to use Mommy's station!"); return; }
+    var html = "<div class='ch-title'>🔥 Mommy's Station</div>" +
+      "<div class='ch-sub'>This is what you can make with ore right now!</div>" +
+      "<div class='world-list'>" + recipes.map(function (r, i) {
+        var cost = Object.keys(r.needs).map(function (k) { return r.needs[k] + " " + k; }).join(" + ");
+        return "<button class='world-card smelt-card' data-i='" + i + "'>" +
+          "<span class='world-emoji'>" + r.icon + "</span>" +
+          "<span class='world-name'>Make " + r.name + "</span>" +
+          "<span class='world-req'>" + cost + "</span></button>";
+      }).join("") + "</div>" +
+      "<button class='ghost-btn' id='smelt-back'>⬅️ BACK</button>";
+    openOverlay(html);
+    $("smelt-back").addEventListener("pointerdown", closeOverlay);
+    document.querySelectorAll(".smelt-card").forEach(function (card) {
+      card.addEventListener("pointerdown", function () {
+        var r = recipes[+card.getAttribute("data-i")];
+        var inv = Save.data.player.inventory;
+        if (!Object.keys(r.needs).every(function (k) { return (inv[k] || 0) >= r.needs[k]; })) return;
+        Object.keys(r.needs).forEach(function (k) { inv[k] -= r.needs[k]; });
+        Object.keys(r.gives).forEach(function (k) { inv[k] = (inv[k] || 0) + r.gives[k]; });
+        Save.save();
+        GameAudio.sfx.smelt();
+        toast(r.icon + " You made " + r.name + "!", 2600);
+        closeOverlay();
+        updateHotbar();
+      });
+    });
   }
 
   function doCraft() {
@@ -417,7 +479,10 @@ var UI = (function () {
     GameAudio.sfx.levelup();
     GameAudio.say("You earned the " + tool.name + "! " + tool.desc);
     celebrate($("overlay-card"));
-    $("tool-ok").addEventListener("pointerdown", closeOverlay);
+    $("tool-ok").addEventListener("pointerdown", function () {
+      closeOverlay();
+      updateHotbar();
+    });
   }
 
   function showDaddy(npc) {
@@ -470,6 +535,74 @@ var UI = (function () {
     });
   }
 
+  /* ---------------- Mommy: super challenges & Minecraft capabilities ---------------- */
+  var MOMMY_TOOLS = [
+    { key: "furnace", name: "MAGIC FURNACE", icon: "🔥", wins: 3,
+      desc: "That's what you do with ORE in Minecraft! Smelt iron ore + coal into INGOTS, sand into GLASS, and meat into a hot dinner!" },
+    { key: "lantern", name: "LANTERN KIT", icon: "🕯️", wins: 8,
+      desc: "Turn wood and coal into TORCHES that GLOW! Light up caves and the Deep Dark so treasure isn't hiding in the dark." }
+  ];
+
+  function nextMommyTool() {
+    var tools = Save.data.player.tools;
+    for (var i = 0; i < MOMMY_TOOLS.length; i++) {
+      if (!tools[MOMMY_TOOLS[i].key]) return MOMMY_TOOLS[i];
+    }
+    return null;
+  }
+
+  function showMommy(npc) {
+    if (!Save.data.mommy) Save.data.mommy = { wins: 0 };
+    var m = Save.data.mommy;
+    var tool = nextMommyTool();
+    var greetings = [
+      "Sip sip... this tea is just right. Ready for a SUPER CHALLENGE?",
+      "I brought my favorite teacup! Quizzes go better with a warm sip.",
+      "The ore in these caves is waiting... but first, a little quiz with your tea!"
+    ];
+    var progress = tool
+      ? "Win " + (tool.wins - m.wins) + " more and I'll teach you a SECRET Minecraft trick! 🎁"
+      : "You know all my tricks! But I still have gems... 💎";
+    var html =
+      "<div class='npc-head mommy' style='--hair:" + CONFIG.MOMMY.hair + "'><span class='tea-cup'>☕</span></div>" +
+      "<div class='ch-title'>Mommy ☕</div>" +
+      "<div class='sentence-text'>" + greetings[Math.floor(Math.random() * greetings.length)] +
+      " Ready, " + CONFIG.PLAYER_NAME + "?<br><br>" + progress + "</div>" +
+      "<button class='big-btn' id='mom-go'>☕ SUPER CHALLENGE!</button>" +
+      "<button class='ghost-btn' id='mom-later'>Maybe later</button>";
+    openOverlay(html);
+    GameAudio.sfx.quest();
+    $("mom-later").addEventListener("pointerdown", closeOverlay);
+    $("mom-go").addEventListener("pointerdown", function () {
+      var kind = Math.random() < 0.5 ? "spell" : "pick";
+      var ch = Learning.getChallenge(kind, { boost: 1 });
+      var run = ch.kind === "spell" ? showSpell : showPick;
+      run(ch, function (result) {
+        Learning.reportResult(ch, result);
+        if (!result.correct) return;
+        Game.grantGems(3);
+        Game.grantXP(25);
+        if (result.mistakes <= 1) {
+          m.wins += 1;
+          Save.save();
+          var t = nextMommyTool();
+          if (t && m.wins >= t.wins) {
+            Save.data.player.tools[t.key] = true;
+            Save.save();
+            updateHotbar();
+            setTimeout(function () { showToolUnlock(t); }, 400);
+            return;
+          }
+          UI.toast(t
+            ? "☕ Super win! " + (t.wins - m.wins) + " more for Mommy's secret trick!"
+            : "☕ Super win! +3 gems, +25 XP!", 3000);
+        } else {
+          UI.toast("💪 You got it! Perfect wins count toward Mommy's secret trick!", 3000);
+        }
+      }, "☕ MOMMY'S SUPER CHALLENGE!");
+    });
+  }
+
   /* ---------------- sister dialogue ---------------- */
   function showDialogue(npc) {
     if (npc.def.dog) {
@@ -486,6 +619,7 @@ var UI = (function () {
       return;
     }
     if (npc.def.daddy) { showDaddy(npc); return; }
+    if (npc.def.mommy) { showMommy(npc); return; }
     var name = npc.def.name;
     var q = Quests.active();
 
@@ -749,6 +883,7 @@ var UI = (function () {
     $("btn-bag").addEventListener("pointerdown", function (e) { e.stopPropagation(); showInventory(); });
     $("btn-mode").addEventListener("pointerdown", function (e) { e.stopPropagation(); Game.toggleMode(); });
     $("btn-craft").addEventListener("pointerdown", function (e) { e.stopPropagation(); doCraft(); });
+    $("btn-smelt").addEventListener("pointerdown", function (e) { e.stopPropagation(); doSmelt(); });
     var jb = $("btn-jump");
     jb.addEventListener("pointerdown", function (e) { e.stopPropagation(); Player.jump = true; });
     ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) {

@@ -149,6 +149,14 @@ html, body {
   border-radius: 10px; cursor: pointer;
   animation: pulse 1.2s infinite;
 }
+#btn-smelt {
+  display: none;
+  right: 22px; bottom: calc(env(safe-area-inset-bottom, 10px) + 236px);
+  font-family: inherit; font-size: 10px; padding: 12px 14px;
+  background: #e07040; color: #fff8ee; border: 3px solid #a44a22;
+  border-radius: 10px; cursor: pointer;
+  animation: pulse 1.2s infinite;
+}
 @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
 /* hotbar */
@@ -281,6 +289,13 @@ html, body {
   left: 11px; right: 11px; top: 31px; height: 12px;
   box-shadow: inset 24px 0 0 -21px #1a1a1a;
 }
+/* Mommy portrait: longer dark hair + teacup */
+.npc-head.mommy { overflow: visible; }
+.npc-head.mommy::before { height: 30px; }
+.npc-head .tea-cup {
+  position: absolute; right: -14px; bottom: -6px; font-size: 22px;
+  filter: drop-shadow(1px 1px 0 #4a3520);
+}
 
 .levelup-burst { font-size: 54px; animation: bounce .8s infinite; }
 .unlock-list { margin: 12px 0; }
@@ -325,9 +340,10 @@ html, body {
 /* inventory screen */
 .inv-tools { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
 .inv-tool {
-  font-size: 9px; background: #fff; border: 2px solid #c9b48a;
+  font-family: inherit; font-size: 9px; background: #fff; border: 2px solid #c9b48a;
   border-radius: 8px; padding: 8px 10px; color: #4a3520;
 }
+button.inv-tool { cursor: pointer; }
 .inv-tool.legendary { background: #f3e8ff; border-color: #b06fe8; color: #6b2fa8; }
 .inv-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));

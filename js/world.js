@@ -12,7 +12,8 @@ var B = {
   BEDROCK: 15, CACTUS: 16, MUSH_STEM: 17, MUSH_CAP: 18, CRYSTAL: 19, GLOW: 20,
   ICE: 21, FLOWER_RED: 22, FLOWER_YELLOW: 23, MUSH_SMALL: 24, SANDSTONE: 25,
   CRYSTAL_GRASS: 26, LEAVES_PINK: 27, BRICK: 28,
-  DEEPSLATE: 29, AMETHYST: 30, MYTHRIL: 31, VOIDROCK: 32, WOOL: 33
+  DEEPSLATE: 29, AMETHYST: 30, MYTHRIL: 31, VOIDROCK: 32, WOOL: 33,
+  GLASS: 34, TORCH: 35
 };
 
 var BLOCKS = (function () {
@@ -39,7 +40,7 @@ var BLOCKS = (function () {
   def(B.WATER,    "water",    { tiles: { top: T.WATER, bottom: T.WATER, side: T.WATER }, solid: false, water: true, drop: null });
   def(B.SNOW,     "snow",     { tiles: { top: T.SNOW_TOP, bottom: T.DIRT, side: T.SNOW_SIDE }, drop: "dirt", hard: 300, icon: "⬜" });
   def(B.COAL,     "coal ore", { tiles: { top: T.COAL, bottom: T.COAL, side: T.COAL }, drop: "coal", hard: 800, icon: "⚫" });
-  def(B.IRON,     "iron ore", { tiles: { top: T.IRON, bottom: T.IRON, side: T.IRON }, drop: "iron", hard: 900, needPick: 1, icon: "⛓️" });
+  def(B.IRON,     "iron ore", { tiles: { top: T.IRON, bottom: T.IRON, side: T.IRON }, drop: "iron ore", hard: 900, needPick: 1, icon: "⛓️" });
   def(B.DIAMOND,  "diamond ore", { tiles: { top: T.DIAMOND, bottom: T.DIAMOND, side: T.DIAMOND }, drop: "diamond", hard: 1000, needPick: 2, icon: "💎" });
   def(B.WORD_ORE, "word ore", { tiles: { top: T.WORD_ORE, bottom: T.WORD_ORE, side: T.WORD_ORE }, special: "wordore", hard: 1, icon: "❓" });
   def(B.CHEST,    "chest",    { tiles: { top: T.CHEST_TOP, bottom: T.CHEST_TOP, side: T.CHEST_SIDE }, special: "chest", hard: 1, icon: "🧰" });
@@ -50,6 +51,8 @@ var BLOCKS = (function () {
   def(B.MYTHRIL,  "mythril ore",  { tiles: { top: T.MYTHRIL, bottom: T.MYTHRIL, side: T.MYTHRIL }, drop: "mythril", hard: 1400, needPick: 2, icon: "🌀" });
   def(B.VOIDROCK, "voidrock", { tiles: { top: T.VOIDROCK, bottom: T.VOIDROCK, side: T.VOIDROCK }, hard: -1 });
   def(B.WOOL,     "wool",     { tiles: { top: T.WOOL, bottom: T.WOOL, side: T.WOOL }, drop: "wool", hard: 250, icon: "🧶" });
+  def(B.GLASS,    "glass",    { tiles: { top: T.GLASS, bottom: T.GLASS, side: T.GLASS }, drop: "glass", hard: 200, icon: "🪟", opaque: false });
+  def(B.TORCH,    "torch",    { tiles: { top: T.TORCH }, cross: true, solid: false, drop: "torch", hard: 60, icon: "🕯️" });
   def(B.CACTUS,   "cactus",   { tiles: { top: T.CACTUS_TOP, bottom: T.CACTUS_TOP, side: T.CACTUS_SIDE }, drop: "cactus", hard: 250, icon: "🌵" });
   def(B.MUSH_STEM,"mushroom stem", { tiles: { top: T.MUSH_STEM, bottom: T.MUSH_STEM, side: T.MUSH_STEM }, drop: "mushroom", hard: 300, icon: "🍄" });
   def(B.MUSH_CAP, "mushroom cap",  { tiles: { top: T.MUSH_CAP, bottom: T.MUSH_STEM, side: T.MUSH_CAP }, drop: "mushroom", hard: 300, icon: "🍄" });
@@ -69,12 +72,12 @@ var BLOCKS = (function () {
 // item name -> block id placed (for building from inventory)
 var ITEM_TO_BLOCK = {
   dirt: B.DIRT, stone: B.STONE, sand: B.SAND, wood: B.LOG, leaves: B.LEAVES,
-  planks: B.PLANKS, coal: B.COAL, iron: B.IRON, diamond: B.DIAMOND,
+  planks: B.PLANKS, coal: B.COAL, diamond: B.DIAMOND,
   cactus: B.CACTUS, mushroom: B.MUSH_CAP, crystal: B.CRYSTAL, glowstone: B.GLOW,
   ice: B.ICE, flower: B.FLOWER_RED, sandstone: B.SANDSTONE,
   "pink leaves": B.LEAVES_PINK, brick: B.BRICK,
   deepslate: B.DEEPSLATE, amethyst: B.AMETHYST, mythril: B.MYTHRIL,
-  wool: B.WOOL
+  wool: B.WOOL, "iron ore": B.IRON, glass: B.GLASS, torch: B.TORCH
 };
 var ITEM_ICON = {
   dirt: "🟫", stone: "🪨", sand: "🟨", wood: "🪵", leaves: "🍃", planks: "🟧",
@@ -82,7 +85,8 @@ var ITEM_ICON = {
   crystal: "🔮", glowstone: "✨", ice: "🧊", flower: "🌸", sandstone: "🧱",
   "pink leaves": "🌸", brick: "🧱",
   deepslate: "⬛", amethyst: "🟣", mythril: "🌀",
-  wool: "🧶", meat: "🍖"
+  wool: "🧶", meat: "🍖", "iron ore": "⛓️", glass: "🪟", torch: "🕯️",
+  "cooked meat": "🍗"
 };
 
 /* ---------------- world definitions ---------------- */
@@ -271,7 +275,9 @@ var World = (function () {
   function isOpaque(b) {
     if (b === B.AIR || b === B.WATER) return false;
     var def = BLOCKS[b];
-    return def ? !def.cross : false;
+    if (!def) return false;
+    if (def.opaque === false) return false;
+    return !def.cross;
   }
 
   function buildChunk(cx, cz) {
