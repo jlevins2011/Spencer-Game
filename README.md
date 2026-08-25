@@ -39,6 +39,13 @@ SPACE to jump, B to toggle build mode.
   bedrock, opening the **Deep Dark** — 20 layers of deepslate, extra diamonds,
   gem-paying amethyst, and ultra-rare mythril at the bottom). 8 wins earn the
   **Thunder Pick** (mines twice as fast). After that he pays out gems.
+- **🐶 Maggie the beagle** wanders every world and loves being petted (tap
+  her!). But bomb a challenge badly and she'll dart in and steal something
+  small — dirt, a flower — never anything valuable. Sneaky beagle.
+
+Difficulty self-adjusts BOTH ways: consistent success unlocks harder words,
+and a rough patch automatically drops back to words the kid can win with
+(plus a head start toward climbing again), so nobody stays stuck or frustrated.
 
 Words quietly ramp up in difficulty as each kid plays, and missed words come
 back around more often until they're nailed. Leveling up unlocks new worlds:

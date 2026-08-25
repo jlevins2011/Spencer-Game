@@ -35,6 +35,34 @@ var Learning = (function () {
     var mod = modules[challenge.moduleId];
     if (mod && mod.reportResult) mod.reportResult(challenge, result);
     Stats.recordChallenge(challenge, result);
+    // a really rough round? Maggie smells opportunity...
+    if (result.mistakes >= 3) Game.maggieSteal();
+  }
+
+  // Shared difficulty ramp for all modules: clean wins climb toward the
+  // next tier; struggling drops back to a tier where the kid can succeed
+  // (with a head start toward re-climbing, so recovery feels quick).
+  function applyRamp(st, challenge, result, maxTier, nameOfTier) {
+    if (challenge.tier !== st.tier) return;
+    if (result.correct && result.mistakes === 0) {
+      st.tierWins += 1;
+      st.struggle = 0;
+      if (st.tierWins >= CONFIG.TIER_UP_WINS && st.tier < maxTier) {
+        st.tier += 1;
+        st.tierWins = 0;
+        UI.toast("📚 New words unlocked: " + nameOfTier(st.tier) + "!");
+      }
+    } else if (result.mistakes > 0) {
+      st.tierWins = Math.max(0, st.tierWins - 1);
+      st.struggle = (st.struggle || 0) + (result.mistakes >= 3 ? 2 : 1);
+      if (st.struggle >= CONFIG.BACK_OFF_AT && st.tier > 0) {
+        st.tier -= 1;
+        st.tierWins = Math.floor(CONFIG.TIER_UP_WINS / 2);
+        st.struggle = 0;
+        UI.toast("💪 Power-up round! Time for some words you ROCK at!", 3200);
+      }
+    }
+    Save.save();
   }
 
   function currentTier() {
@@ -49,7 +77,8 @@ var Learning = (function () {
 
   return {
     registerModule: registerModule, getChallenge: getChallenge,
-    reportResult: reportResult, currentTier: currentTier, currentFocus: currentFocus
+    reportResult: reportResult, currentTier: currentTier, currentFocus: currentFocus,
+    applyRamp: applyRamp
   };
 })();
 
@@ -159,18 +188,8 @@ var Learning = (function () {
 
   // result: { correct: bool, mistakes: int }
   function reportResult(challenge, result) {
-    var st = state();
-    // Only challenges at the current tier move the ramp.
-    if (challenge.tier === st.tier) {
-      if (result.correct && result.mistakes === 0) st.tierWins += 1;
-      else if (result.mistakes > 0) st.tierWins = Math.max(0, st.tierWins - 1);
-      if (st.tierWins >= CONFIG.TIER_UP_WINS && st.tier < CURRICULUM.TIERS.length - 1) {
-        st.tier += 1;
-        st.tierWins = 0;
-        UI.toast("📚 New words unlocked: " + CURRICULUM.TIERS[st.tier].name + "!");
-      }
-    }
-    Save.save();
+    Learning.applyRamp(state(), challenge, result, CURRICULUM.TIERS.length - 1,
+      function (t) { return CURRICULUM.TIERS[t].name; });
   }
 
   Learning.registerModule({

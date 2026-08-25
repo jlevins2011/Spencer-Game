@@ -70,6 +70,7 @@ var GameAudio = (function () {
     levelup: function () { [523,587,659,784,1047].forEach(function (f, i) { tone(f, 0.14, "triangle", 0.14, i * 0.1); }); },
     gem:     function () { tone(880, 0.08, "triangle", 0.12); tone(1320, 0.12, "triangle", 0.10, 0.06); },
     quest:   function () { tone(392, 0.12, "triangle", 0.12); tone(523, 0.18, "triangle", 0.12, 0.1); },
+    bark:    function () { tone(360, 0.07, "sawtooth", 0.16); tone(250, 0.09, "sawtooth", 0.13, 0.09); tone(340, 0.07, "sawtooth", 0.15, 0.22); },
     step:    function () { tone(90 + Math.random() * 30, 0.04, "square", 0.03); }
   };
 

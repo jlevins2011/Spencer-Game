@@ -19,8 +19,8 @@ var Save = (function () {
         tools: {}                    // special tools from Daddy: drill, thunder
       },
       daddy: { wins: 0 },            // super-challenge wins
-      reading: { tier: 0, tierWins: 0 },
-      spelling: { tier: 0, tierWins: 0 },
+      reading: { tier: 0, tierWins: 0, struggle: 0 },
+      spelling: { tier: 0, tierWins: 0, struggle: 0 },
       worlds: {},                    // worldId -> { edits: {"x,y,z": blockId} }
       quests: { active: null, completed: 0 },
       stats: {
