@@ -176,14 +176,20 @@ var Game = (function () {
     }
 
     // regular mining
-    if (def.hard < 0) { UI.toast("That block is too strong to mine!"); return; }
+    if (def.hard < 0) { UI.toast("That block is too strong to mine... maybe forever!"); return; }
     var p = Save.data.player;
+    if (def.needTool && !p.tools[def.needTool]) {
+      GameAudio.sfx.wrong();
+      UI.toast("🌀 Only a legendary tool can break " + def.name + "! Daddy's SUPER CHALLENGES might earn you one...", 3500);
+      return;
+    }
     if (def.needPick > p.pickTier) {
       GameAudio.sfx.wrong();
       UI.toast("⛏️ You need a better pickaxe for " + def.name + "!");
       return;
     }
-    var ms = Math.max(120, def.hard / PICK_SPEED[p.pickTier]);
+    var speed = PICK_SPEED[p.pickTier] * (p.tools.thunder ? 2 : 1);
+    var ms = Math.max(120, def.hard / speed);
     mining = {
       x: hit.block.x, y: hit.block.y, z: hit.block.z,
       until: performance.now() + ms, total: ms, def: def
@@ -203,6 +209,11 @@ var Game = (function () {
     if (m.def.drop) {
       grantItem(m.def.drop, 1);
       grantXP(1);
+      if (m.def.drop === "amethyst") { grantGems(1); UI.toast("🟣 Amethyst! +1 gem"); }
+      if (m.def.drop === "mythril") { grantGems(2); grantXP(5); UI.toast("🌀 MYTHRIL! Super rare! +2 gems"); }
+    }
+    if (m.def.id === B.BEDROCK) {
+      UI.toast("🌀 You broke through the bedrock! The DEEP DARK awaits below...", 3500);
     }
     // occasionally the helpers cheer them on
     if (Math.random() < 0.02) {
@@ -218,7 +229,7 @@ var Game = (function () {
     var inv = Save.data.player.inventory;
     if (!inv[item] || inv[item] <= 0) { UI.toast("No more " + item + "! Mine some more."); UI.updateHotbar(); return; }
     var t = hit.place;
-    if (t.y < 1 || t.y >= World.SY) return;
+    if (t.y <= World.MIN_Y || t.y >= World.SY) return;
     if (World.getBlock(t.x, t.y, t.z) !== B.AIR) return;
     if (Player.wouldIntersectPlayer(t.x, t.y, t.z)) return;
     var blockId = ITEM_TO_BLOCK[item];

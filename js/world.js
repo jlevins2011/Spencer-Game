@@ -11,7 +11,8 @@ var B = {
   WATER: 8, SNOW: 9, COAL: 10, IRON: 11, DIAMOND: 12, WORD_ORE: 13, CHEST: 14,
   BEDROCK: 15, CACTUS: 16, MUSH_STEM: 17, MUSH_CAP: 18, CRYSTAL: 19, GLOW: 20,
   ICE: 21, FLOWER_RED: 22, FLOWER_YELLOW: 23, MUSH_SMALL: 24, SANDSTONE: 25,
-  CRYSTAL_GRASS: 26, LEAVES_PINK: 27, BRICK: 28
+  CRYSTAL_GRASS: 26, LEAVES_PINK: 27, BRICK: 28,
+  DEEPSLATE: 29, AMETHYST: 30, MYTHRIL: 31, VOIDROCK: 32
 };
 
 var BLOCKS = (function () {
@@ -42,7 +43,12 @@ var BLOCKS = (function () {
   def(B.DIAMOND,  "diamond ore", { tiles: { top: T.DIAMOND, bottom: T.DIAMOND, side: T.DIAMOND }, drop: "diamond", hard: 1000, needPick: 2, icon: "💎" });
   def(B.WORD_ORE, "word ore", { tiles: { top: T.WORD_ORE, bottom: T.WORD_ORE, side: T.WORD_ORE }, special: "wordore", hard: 1, icon: "❓" });
   def(B.CHEST,    "chest",    { tiles: { top: T.CHEST_TOP, bottom: T.CHEST_TOP, side: T.CHEST_SIDE }, special: "chest", hard: 1, icon: "🧰" });
-  def(B.BEDROCK,  "bedrock",  { tiles: { top: T.BEDROCK, bottom: T.BEDROCK, side: T.BEDROCK }, hard: -1 });
+  // bedrock: only the Voidbreaker Drill (from Daddy's challenges) breaks it
+  def(B.BEDROCK,  "bedrock",  { tiles: { top: T.BEDROCK, bottom: T.BEDROCK, side: T.BEDROCK }, hard: 1400, needTool: "drill" });
+  def(B.DEEPSLATE, "deepslate", { tiles: { top: T.DEEPSLATE, bottom: T.DEEPSLATE, side: T.DEEPSLATE }, drop: "deepslate", hard: 900, needPick: 1, icon: "⬛" });
+  def(B.AMETHYST, "amethyst ore", { tiles: { top: T.AMETHYST, bottom: T.AMETHYST, side: T.AMETHYST }, drop: "amethyst", hard: 1000, needPick: 2, icon: "🟣" });
+  def(B.MYTHRIL,  "mythril ore",  { tiles: { top: T.MYTHRIL, bottom: T.MYTHRIL, side: T.MYTHRIL }, drop: "mythril", hard: 1400, needPick: 2, icon: "🌀" });
+  def(B.VOIDROCK, "voidrock", { tiles: { top: T.VOIDROCK, bottom: T.VOIDROCK, side: T.VOIDROCK }, hard: -1 });
   def(B.CACTUS,   "cactus",   { tiles: { top: T.CACTUS_TOP, bottom: T.CACTUS_TOP, side: T.CACTUS_SIDE }, drop: "cactus", hard: 250, icon: "🌵" });
   def(B.MUSH_STEM,"mushroom stem", { tiles: { top: T.MUSH_STEM, bottom: T.MUSH_STEM, side: T.MUSH_STEM }, drop: "mushroom", hard: 300, icon: "🍄" });
   def(B.MUSH_CAP, "mushroom cap",  { tiles: { top: T.MUSH_CAP, bottom: T.MUSH_STEM, side: T.MUSH_CAP }, drop: "mushroom", hard: 300, icon: "🍄" });
@@ -65,13 +71,15 @@ var ITEM_TO_BLOCK = {
   planks: B.PLANKS, coal: B.COAL, iron: B.IRON, diamond: B.DIAMOND,
   cactus: B.CACTUS, mushroom: B.MUSH_CAP, crystal: B.CRYSTAL, glowstone: B.GLOW,
   ice: B.ICE, flower: B.FLOWER_RED, sandstone: B.SANDSTONE,
-  "pink leaves": B.LEAVES_PINK, brick: B.BRICK
+  "pink leaves": B.LEAVES_PINK, brick: B.BRICK,
+  deepslate: B.DEEPSLATE, amethyst: B.AMETHYST, mythril: B.MYTHRIL
 };
 var ITEM_ICON = {
   dirt: "🟫", stone: "🪨", sand: "🟨", wood: "🪵", leaves: "🍃", planks: "🟧",
   coal: "⚫", iron: "⛓️", diamond: "💎", cactus: "🌵", mushroom: "🍄",
   crystal: "🔮", glowstone: "✨", ice: "🧊", flower: "🌸", sandstone: "🧱",
-  "pink leaves": "🌸", brick: "🧱"
+  "pink leaves": "🌸", brick: "🧱",
+  deepslate: "⬛", amethyst: "🟣", mythril: "🌀"
 };
 
 /* ---------------- world definitions ---------------- */
@@ -91,10 +99,14 @@ var WORLD_DEFS = [
 /* ---------------- the world ---------------- */
 var World = (function () {
   var SX = 128, SY = 42, SZ = 128;
+  // The Deep Dark: layers below y=0, sealed by bedrock until the
+  // Voidbreaker Drill is earned. MIN_Y is solid voidrock (unbreakable).
+  var MIN_Y = -20;
+  var OY = -MIN_Y;                 // index offset for negative y
   var CHUNK = 16;
   var CX = SX / CHUNK, CZ = SZ / CHUNK;
 
-  var data = new Uint8Array(SX * SY * SZ);
+  var data = new Uint8Array(SX * (SY + OY) * SZ);
   var scene = null;
   var material = null, waterMaterial = null;
   var chunkMeshes = [];      // solid meshes (raycast targets)
@@ -102,8 +114,8 @@ var World = (function () {
   var chunkGroup = null;
   var currentDef = WORLD_DEFS[0];
 
-  function idx(x, y, z) { return (y * SZ + z) * SX + x; }
-  function inBounds(x, y, z) { return x >= 0 && x < SX && y >= 0 && y < SY && z >= 0 && z < SZ; }
+  function idx(x, y, z) { return ((y + OY) * SZ + z) * SX + x; }
+  function inBounds(x, y, z) { return x >= 0 && x < SX && y >= MIN_Y && y < SY && z >= 0 && z < SZ; }
   function getBlock(x, y, z) { return inBounds(x, y, z) ? data[idx(x, y, z)] : B.AIR; }
 
   /* ----- seeded noise ----- */
@@ -143,6 +155,20 @@ var World = (function () {
     for (x = 0; x < SX; x++) for (z = 0; z < SZ; z++) {
       var h = heightAt(x, z, def);
       data[idx(x, 0, z)] = B.BEDROCK;
+
+      // ---- the Deep Dark (below bedrock) ----
+      data[idx(x, MIN_Y, z)] = B.VOIDROCK;
+      for (y = MIN_Y + 1; y < 0; y++) {
+        var db = B.DEEPSLATE;
+        var dr = hash2(x * 17 + y * 91, z * 23 + y * 41);
+        if (dr < 0.02 && y < -3) db = B.AMETHYST;
+        else if (dr < 0.028 && y < -11) db = B.MYTHRIL;
+        else if (dr < 0.043) db = B.DIAMOND;
+        else if (dr < 0.055) db = B.GLOW;
+        else if (dr < 0.068) db = B.WORD_ORE;
+        data[idx(x, y, z)] = db;
+      }
+
       for (y = 1; y <= h; y++) {
         var b;
         if (y >= h) b = def.surface;
@@ -250,7 +276,7 @@ var World = (function () {
     var wpos = [], wnor = [], wuvs = [], wind = [];
     var x0 = cx * CHUNK, z0 = cz * CHUNK;
 
-    for (var x = x0; x < x0 + CHUNK; x++) for (var z = z0; z < z0 + CHUNK; z++) for (var y = 0; y < SY; y++) {
+    for (var x = x0; x < x0 + CHUNK; x++) for (var z = z0; z < z0 + CHUNK; z++) for (var y = MIN_Y; y < SY; y++) {
       var b = data[idx(x, y, z)];
       if (b === B.AIR) continue;
       var def = BLOCKS[b];
@@ -408,6 +434,6 @@ var World = (function () {
     surfaceY: surfaceY, isSolid: isSolid, isWaterAt: isWaterAt,
     get meshes() { return chunkMeshes; },
     get def() { return currentDef; },
-    SX: SX, SY: SY, SZ: SZ
+    SX: SX, SY: SY, SZ: SZ, MIN_Y: MIN_Y
   };
 })();

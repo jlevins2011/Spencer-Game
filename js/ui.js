@@ -333,8 +333,89 @@ var UI = (function () {
     else showPick(ch, wrapped, intro);
   }
 
+  /* ---------------- Daddy: super challenges & legendary tools ---------------- */
+  var TOOLS = [
+    { key: "drill", name: "VOIDBREAKER DRILL", icon: "🌀", wins: 3,
+      desc: "It can smash BEDROCK! Dig below the world into the DEEP DARK, where amethyst and mythril hide!" },
+    { key: "thunder", name: "THUNDER PICK", icon: "⚡", wins: 8,
+      desc: "It mines everything TWICE as fast! CRACKA-BOOM!" }
+  ];
+
+  function nextTool() {
+    var tools = Save.data.player.tools;
+    for (var i = 0; i < TOOLS.length; i++) {
+      if (!tools[TOOLS[i].key]) return TOOLS[i];
+    }
+    return null;
+  }
+
+  function showToolUnlock(tool) {
+    var html =
+      "<div class='levelup-burst'>" + tool.icon + "</div>" +
+      "<div class='ch-title big'>LEGENDARY TOOL!</div>" +
+      "<div class='rank-name'>" + tool.icon + " " + tool.name + "</div>" +
+      "<div class='unlock-list'><div class='unlock-item'>" + tool.desc + "</div></div>" +
+      "<button class='big-btn' id='tool-ok'>WHOA!</button>";
+    openOverlay(html);
+    GameAudio.sfx.levelup();
+    GameAudio.say("You earned the " + tool.name + "! " + tool.desc);
+    celebrate($("overlay-card"));
+    $("tool-ok").addEventListener("pointerdown", closeOverlay);
+  }
+
+  function showDaddy(npc) {
+    var d = Save.data.daddy;
+    var tool = nextTool();
+    var greetings = [
+      "My leg is stuck in this silly boot, but my brain still works!",
+      "Ouch, my leg! Good thing challenges don't need two feet!",
+      "I can't run with this boot on... but I CAN quiz you!"
+    ];
+    var progress = tool
+      ? "Win " + (tool.wins - d.wins) + " more and I'll give you a MYSTERY TOOL! 🎁"
+      : "You have all my tools! But I still have gems... 💎";
+    var html =
+      "<div class='npc-head daddy' style='--hair:" + CONFIG.DADDY.hair + "'></div>" +
+      "<div class='ch-title'>Daddy</div>" +
+      "<div class='sentence-text'>" + greetings[Math.floor(Math.random() * greetings.length)] +
+      " Ready for a SUPER CHALLENGE, " + CONFIG.PLAYER_NAME + "?<br><br>" + progress + "</div>" +
+      "<button class='big-btn' id='dad-go'>🔥 SUPER CHALLENGE!</button>" +
+      "<button class='ghost-btn' id='dad-later'>Maybe later</button>";
+    openOverlay(html);
+    GameAudio.sfx.quest();
+    $("dad-later").addEventListener("pointerdown", closeOverlay);
+    $("dad-go").addEventListener("pointerdown", function () {
+      var kind = Math.random() < 0.5 ? "spell" : "pick";
+      var ch = Learning.getChallenge(kind, { boost: 1 });
+      var run = ch.kind === "spell" ? showSpell : showPick;
+      run(ch, function (result) {
+        Learning.reportResult(ch, result);
+        if (!result.correct) return;
+        Game.grantGems(3);
+        Game.grantXP(25);
+        if (result.mistakes <= 1) {
+          d.wins += 1;
+          Save.save();
+          var t = nextTool();
+          if (t && d.wins >= t.wins) {
+            Save.data.player.tools[t.key] = true;
+            Save.save();
+            setTimeout(function () { showToolUnlock(t); }, 400);
+            return;
+          }
+          UI.toast(t
+            ? "🔥 Super win! " + (t.wins - d.wins) + " more for Daddy's mystery tool!"
+            : "🔥 Super win! +3 gems, +25 XP!", 3000);
+        } else {
+          UI.toast("💪 You got it! Perfect wins count toward Daddy's mystery tool!", 3000);
+        }
+      }, "🔥 DADDY'S SUPER CHALLENGE!");
+    });
+  }
+
   /* ---------------- sister dialogue ---------------- */
   function showDialogue(npc) {
+    if (npc.def.daddy) { showDaddy(npc); return; }
     var name = npc.def.name;
     var q = Quests.active();
 

@@ -29,6 +29,11 @@ var CONFIG = {
     }
   ],
 
+  // Daddy appears in every kid's world: extra tall, red hair, glasses,
+  // and a big boot on his hurt right leg. His SUPER CHALLENGES are
+  // harder than normal and earn legendary tools.
+  DADDY: { name: "Daddy", hair: "#c1471e", shirt: "#4a6a8a", daddy: true },
+
   // Set when a player is chosen on the title screen.
   ACTIVE: null,
   PLAYER_NAME: "",

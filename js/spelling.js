@@ -49,7 +49,8 @@ var SPELLING_TIERS = [
     return Math.min(state().tier, SPELLING_TIERS.length - 1);
   }
 
-  function pickTierIndex() {
+  function pickTierIndex(boost) {
+    if (boost) return Math.min(currentTier() + boost, SPELLING_TIERS.length - 1);
     var t = currentTier();
     if (t > 0 && Math.random() < CONFIG.REVIEW_CHANCE) return t - 1;
     return t;
@@ -119,8 +120,9 @@ var SPELLING_TIERS = [
     return out;
   }
 
-  function getChallenge(kind) {
-    var tierIdx = pickTierIndex();
+  function getChallenge(kind, opts) {
+    var boost = (opts && opts.boost) || 0;
+    var tierIdx = pickTierIndex(boost);
     var word = chooseWord(tierIdx);
 
     if (kind === "spell" || kind === "sentence") {
@@ -141,7 +143,7 @@ var SPELLING_TIERS = [
     }
 
     // "pick" -> which spelling is right?
-    var nChoices = tierIdx >= 2 ? 4 : 3;
+    var nChoices = (tierIdx >= 2 || boost) ? 4 : 3;
     return {
       moduleId: "spelling", kind: "pick", tier: tierIdx,
       word: word,
