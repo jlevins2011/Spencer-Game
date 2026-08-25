@@ -87,7 +87,8 @@ var Controls = (function () {
       var mx = e.clientX - lookLast.x, my = e.clientY - lookLast.y;
       lookMoved += Math.abs(mx) + Math.abs(my);
       lookLast.x = e.clientX; lookLast.y = e.clientY;
-      Player.look(-mx * LOOK_SENS, -my * LOOK_SENS);
+      // drag right = look right, drag down = look down (standard mobile FPS)
+      Player.look(mx * LOOK_SENS, my * LOOK_SENS);
     }
   }
 
