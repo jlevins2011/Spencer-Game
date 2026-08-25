@@ -35,6 +35,7 @@ var Learning = (function () {
     var mod = modules[challenge.moduleId];
     if (mod && mod.reportResult) mod.reportResult(challenge, result);
     Stats.recordChallenge(challenge, result);
+    Game.notifyEdu();
     // a really rough round? Maggie smells opportunity...
     if (result.mistakes >= 3) Game.maggieSteal();
   }

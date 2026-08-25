@@ -108,6 +108,63 @@ var UI = (function () {
     $("btn-mode").classList.toggle("build", Game.mode === "build");
   }
 
+  /* ---------------- inventory screen ---------------- */
+  function showInventory() {
+    var p = Save.data.player;
+    var inv = p.inventory;
+    var items = Object.keys(inv).filter(function (k) { return inv[k] > 0; });
+
+    var grid = items.length
+      ? items.map(function (item) {
+          var placeable = ITEM_TO_BLOCK[item] !== undefined;
+          return "<button class='inv-slot" + (placeable ? "" : " inv-flat") + "' data-item='" + item + "'>" +
+            "<span class='inv-icon'>" + (ITEM_ICON[item] || "⬜") + "</span>" +
+            "<span class='inv-count'>" + inv[item] + "</span>" +
+            "<span class='inv-name'>" + item + "</span></button>";
+        }).join("")
+      : "<div class='ch-sub'>Your bag is empty — go mine something!</div>";
+
+    var pickNames = ["Wooden Pickaxe", "Stone Pickaxe", "Iron Pickaxe", "Diamond Pickaxe"];
+    var toolsHtml = "<div class='inv-tools'>" +
+      "<span class='inv-tool'>⛏️ " + pickNames[p.pickTier] + "</span>" +
+      (p.tools.drill ? "<span class='inv-tool legendary'>🌀 Voidbreaker Drill</span>" : "") +
+      (p.tools.thunder ? "<span class='inv-tool legendary'>⚡ Thunder Pick</span>" : "") +
+      "</div>";
+
+    openOverlay(
+      "<div class='ch-title'>🎒 " + CONFIG.PLAYER_NAME + "'s Stuff</div>" +
+      "<div class='ch-sub'>💎 " + p.gems + " gems · Lv " + p.level + " " + rankFor(p.level) + "</div>" +
+      toolsHtml +
+      "<div class='inv-grid'>" + grid + "</div>" +
+      "<div class='ch-sub'>Tap a block to build with it!</div>" +
+      "<button class='big-btn' id='inv-close'>BACK TO THE GAME</button>"
+    );
+    $("inv-close").addEventListener("pointerdown", closeOverlay);
+    document.querySelectorAll(".inv-slot").forEach(function (slot) {
+      slot.addEventListener("pointerdown", function () {
+        var item = slot.getAttribute("data-item");
+        if (ITEM_TO_BLOCK[item] === undefined) {
+          GameAudio.sfx.pop();
+          toast(item === "meat" ? "🍖 Yummy! Someone might want this for dinner..." :
+            "You can't place " + item + " — but it might be useful!");
+          return;
+        }
+        closeOverlay();
+        Game.selectedItem = item;
+        Game.setMode("build");
+        // sync the hotbar selection if the item is on it
+        var idx = hotbarItems().indexOf(item);
+        if (idx >= 0) selectHotbar(idx);
+        toast("🧱 Building with " + item + "!");
+      });
+    });
+  }
+
+  function toggleInventory() {
+    if ($("overlay").classList.contains("open")) closeOverlay();
+    else if (Game.running) showInventory();
+  }
+
   /* ---------------- crafting ---------------- */
   var CRAFTS = [
     { tier: 1, name: "stone pickaxe", level: 2, needs: { stone: 5, wood: 2 }, icon: "⛏️" },
@@ -494,6 +551,7 @@ var UI = (function () {
           answered = true;
           GameAudio.sfx.correct();
           Stats.recordChallenge({ moduleId: "reading", kind: "sentence", skill: "sentences", word: "" }, { correct: true, mistakes: mistakes });
+          Game.notifyEdu();
           Quests.start(name, quest);
           GameAudio.say("Yes! " + quest.text);
           b.classList.add("right");
@@ -688,6 +746,7 @@ var UI = (function () {
   function init() {
     document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     $("btn-pause").addEventListener("pointerdown", function (e) { e.stopPropagation(); showPause(); });
+    $("btn-bag").addEventListener("pointerdown", function (e) { e.stopPropagation(); showInventory(); });
     $("btn-mode").addEventListener("pointerdown", function (e) { e.stopPropagation(); Game.toggleMode(); });
     $("btn-craft").addEventListener("pointerdown", function (e) { e.stopPropagation(); doCraft(); });
     var jb = $("btn-jump");
@@ -703,6 +762,7 @@ var UI = (function () {
     updateQuestHud: updateQuestHud, updateModeButton: updateModeButton,
     selectHotbar: selectHotbar, selectedItem: selectedItem,
     showChallenge: showChallenge, showDialogue: showDialogue,
+    showInventory: showInventory, toggleInventory: toggleInventory,
     showLevelUp: showLevelUp, showPause: showPause, showHome: showHome, hideHome: hideHome,
     rankFor: rankFor, xpNeeded: xpNeeded, nextCraftInfo: nextCraftInfo,
     closeOverlay: closeOverlay

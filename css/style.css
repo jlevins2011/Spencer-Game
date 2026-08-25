@@ -139,6 +139,7 @@ html, body {
 .action-btn:active { background: rgba(255,255,255,.25); }
 #btn-jump { right: 18px; bottom: calc(env(safe-area-inset-bottom, 10px) + 96px); }
 #btn-mode { right: 104px; bottom: calc(env(safe-area-inset-bottom, 10px) + 84px); width: 60px; height: 60px; font-size: 24px; }
+#btn-bag { right: 104px; bottom: calc(env(safe-area-inset-bottom, 10px) + 158px); width: 60px; height: 60px; font-size: 24px; }
 #btn-mode.build { background: rgba(255, 180, 60, .5); }
 #btn-craft {
   display: none;
@@ -320,6 +321,31 @@ html, body {
 .pr-table th, .pr-table td {
   font-size: 9px; padding: 6px 4px; border-bottom: 1px solid #e8dcc0; text-align: left;
 }
+
+/* inventory screen */
+.inv-tools { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
+.inv-tool {
+  font-size: 9px; background: #fff; border: 2px solid #c9b48a;
+  border-radius: 8px; padding: 8px 10px; color: #4a3520;
+}
+.inv-tool.legendary { background: #f3e8ff; border-color: #b06fe8; color: #6b2fa8; }
+.inv-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 10px; margin: 14px 0; max-height: 44vh; overflow-y: auto;
+}
+.inv-slot {
+  font-family: inherit; position: relative;
+  background: #fff; border: 3px solid #c9b48a; border-radius: 10px;
+  padding: 12px 6px 8px; cursor: pointer; text-align: center;
+}
+.inv-slot:active { background: #f2e8d0; }
+.inv-slot.inv-flat { background: #f7f2e4; border-style: dashed; }
+.inv-icon { font-size: 28px; display: block; }
+.inv-count {
+  position: absolute; top: 4px; right: 7px;
+  font-size: 10px; color: #8a6a4a;
+}
+.inv-name { font-size: 8px; color: #8a6a4a; display: block; margin-top: 6px; word-break: break-all; }
 
 /* email management in the dashboard */
 .pr-emails { margin: 8px 0; }

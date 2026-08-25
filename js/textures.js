@@ -49,7 +49,7 @@ var Textures = (function () {
     MUSH_STEM: 22, MUSH_CAP: 23, CRYSTAL: 24, GLOW: 25, ICE: 26,
     FLOWER_RED: 27, FLOWER_YELLOW: 28, MUSH_SMALL: 29, SANDSTONE: 30, CRYSTAL_GRASS: 31,
     LEAVES_PINK: 32, BRICK: 33,
-    DEEPSLATE: 34, AMETHYST: 35, MYTHRIL: 36, VOIDROCK: 37
+    DEEPSLATE: 34, AMETHYST: 35, MYTHRIL: 36, VOIDROCK: 37, WOOL: 38
   };
 
   function paintAll() {
@@ -127,6 +127,10 @@ var Textures = (function () {
     spots(4, 4, "#3fe8c4", 4, 2, "#a8ffe8");
     fill(5, 4, "#17131f", ["#1f1830", "#0f0c16", "#241c38"]);                       // voidrock
     spots(5, 4, "#4a3a7a", 3, 1);
+    fill(6, 4, "#f2eee4", ["#e8e2d4", "#faf6ec"]);                                  // wool
+    for (var wy = 0; wy < TILE; wy += 4) for (var wx = 0; wx < TILE; wx += 4) {
+      px(6, 4, wx + 1, wy + 1, "#ddd6c6"); px(6, 4, wx + 2, wy + 2, "#e8e2d4");
+    }
   }
 
   // map tile constant -> [tx, ty]

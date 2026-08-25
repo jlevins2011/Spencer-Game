@@ -116,6 +116,7 @@ var Controls = (function () {
       if (down && e.code === "Space") { Player.jump = true; e.preventDefault(); }
       if (!down && e.code === "Space") Player.jump = false;
       if (down && (e.code === "KeyB")) Game.toggleMode();
+      if (down && (e.code === "KeyE")) UI.toggleInventory();
       if (down && e.code >= "Digit1" && e.code <= "Digit9") {
         UI.selectHotbar(parseInt(e.code.slice(5), 10) - 1);
       }
