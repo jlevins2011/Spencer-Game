@@ -34,6 +34,10 @@ var CONFIG = {
   // harder than normal and earn legendary tools.
   DADDY: { name: "Daddy", hair: "#c1471e", shirt: "#4a6a8a", daddy: true },
 
+  // Mommy: dark brown hair, always holding a cup of tea. Her SUPER
+  // CHALLENGES unlock Minecraft-style capabilities (smelting ore, torches).
+  MOMMY: { name: "Mommy", hair: "#3d2314", shirt: "#c4786a", mommy: true },
+
   // Set when a player is chosen on the title screen.
   ACTIVE: null,
   PLAYER_NAME: "",

@@ -22,7 +22,7 @@ so it launches full-screen like an app.
 - **Tap a block** — mine it (⬆️ button jumps)
 - **⛏️/🧱 button** — switch between mine mode and build mode
 - **Tap a bag item** — select a block, then tap the world to place it
-- **Tap Olivia or Penelope** — get a quest!
+- **Tap Olivia, Penelope, Daddy, or Mommy** — quests and super challenges!
 
 On a computer: WASD to move, drag the mouse to look, click to mine/place,
 SPACE to jump, B to toggle build mode.
@@ -39,6 +39,14 @@ SPACE to jump, B to toggle build mode.
   bedrock, opening the **Deep Dark** — 20 layers of deepslate, extra diamonds,
   gem-paying amethyst, and ultra-rare mythril at the bottom). 8 wins earn the
   **Thunder Pick** (mines twice as fast). After that he pays out gems.
+- **☕ Mommy's SUPER CHALLENGES** — Mommy is nearby with dark brown hair and
+  her teacup. Same harder-word quizzes as Daddy, but her gifts are Minecraft
+  *capabilities*. 3 wins earn the **Magic Furnace**: smelt iron ore + coal
+  into ingots (that's what you do with ore!), sand + coal into glass, and
+  meat + coal into cooked dinner. 8 wins earn the **Lantern Kit**: wood +
+  coal become glowing **torches** that light up caves and the Deep Dark.
+  A **🔥 SMELT!** button appears when a recipe is ready. After that she
+  pays out gems too.
 - **🐶 Maggie the beagle** wanders every world and loves being petted (tap
   her!). But bomb a challenge badly and she'll dart in and steal something
   small — dirt, a flower — never anything valuable. Sneaky beagle.

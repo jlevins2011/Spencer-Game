@@ -75,6 +75,7 @@ var Game = (function () {
     Player.spawnAt(sx, sz);
     NPCs.placeAll(sx, sz);
     Animals.populate();
+    rebuildTorchLights();
     UI.toast(def.emoji + " Welcome to " + def.name + "!");
     GameAudio.say("Welcome to " + def.name + "!");
   }
@@ -221,7 +222,12 @@ var Game = (function () {
       grantXP(1);
       if (m.def.drop === "amethyst") { grantGems(1); UI.toast("🟣 Amethyst! +1 gem"); }
       if (m.def.drop === "mythril") { grantGems(2); grantXP(5); UI.toast("🌀 MYTHRIL! Super rare! +2 gems"); }
+      if (m.def.drop === "iron ore" && !Save.data.player.tools.furnace &&
+          (Save.data.player.inventory["iron ore"] || 0) <= 2) {
+        UI.toast("⛓️ Raw iron ore! Mommy can teach you to SMELT this into ingots...", 3200);
+      }
     }
+    if (m.def.id === B.TORCH) removeTorchLight(m.x, m.y, m.z);
     if (m.def.id === B.BEDROCK) {
       UI.toast("🌀 You broke through the bedrock! The DEEP DARK awaits below...", 3500);
     }
@@ -244,12 +250,45 @@ var Game = (function () {
     if (Player.wouldIntersectPlayer(t.x, t.y, t.z)) return;
     var blockId = ITEM_TO_BLOCK[item];
     if (blockId === undefined) return;
+    if (blockId === B.TORCH && !Save.data.player.tools.lantern) {
+      UI.toast("🕯️ Mommy's lantern kit lets you place torches that GLOW!");
+      return;
+    }
     World.setBlock(t.x, t.y, t.z, blockId);
     inv[item] -= 1;
     Save.save();
     Stats.recordPlace();
     GameAudio.sfx.place();
     UI.updateHotbar();
+    if (blockId === B.TORCH) addTorchLight(t.x, t.y, t.z);
+  }
+
+  /* ---------------- torch lights (Mommy's lantern kit) ---------------- */
+  var torchLights = {};
+  function addTorchLight(x, y, z) {
+    var key = x + "," + y + "," + z;
+    if (torchLights[key]) return;
+    if (Object.keys(torchLights).length >= 48) return;
+    var light = new THREE.PointLight(0xffcc66, 1.15, 9, 2);
+    light.position.set(x + 0.5, y + 0.7, z + 0.5);
+    scene.add(light);
+    torchLights[key] = light;
+  }
+  function removeTorchLight(x, y, z) {
+    var key = x + "," + y + "," + z;
+    if (!torchLights[key]) return;
+    scene.remove(torchLights[key]);
+    delete torchLights[key];
+  }
+  function rebuildTorchLights() {
+    Object.keys(torchLights).forEach(function (k) { scene.remove(torchLights[k]); });
+    torchLights = {};
+    var edits = Save.worldEdits(World.def.id);
+    Object.keys(edits).forEach(function (key) {
+      if (edits[key] !== B.TORCH) return;
+      var p = key.split(",");
+      addTorchLight(+p[0], +p[1], +p[2]);
+    });
   }
 
   /* ---------------- word storms ---------------- */
@@ -334,11 +373,19 @@ var Game = (function () {
     var daylight = 0.62 + 0.38 * Math.max(0.25, Math.sin(t * Math.PI * 2) * 0.5 + 0.5);
     sun.intensity = 0.9 * daylight;
     ambient.intensity = 0.35 + 0.25 * daylight;
+    hemi.intensity = 0.35;
     var ang = t * Math.PI * 2;
     sun.position.set(Math.cos(ang) * 80, Math.abs(Math.sin(ang)) * 90 + 25, 40);
     skyDay.setHex(World.def.sky);
     skyCur.copy(skyDay).multiplyScalar(0.45 + 0.55 * daylight);
     if (scene.background) scene.background.copy(skyCur);
+    // Deep Dark (and any dug hole) is gloomy — torches from Mommy shine here
+    if (Player.position.y < 1) {
+      ambient.intensity = 0.10;
+      hemi.intensity = 0.06;
+      sun.intensity = 0.04;
+      if (scene.background) scene.background.setHex(0x0a0814);
+    }
   }
 
   /* ---------------- main loop ---------------- */

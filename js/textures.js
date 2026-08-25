@@ -49,7 +49,8 @@ var Textures = (function () {
     MUSH_STEM: 22, MUSH_CAP: 23, CRYSTAL: 24, GLOW: 25, ICE: 26,
     FLOWER_RED: 27, FLOWER_YELLOW: 28, MUSH_SMALL: 29, SANDSTONE: 30, CRYSTAL_GRASS: 31,
     LEAVES_PINK: 32, BRICK: 33,
-    DEEPSLATE: 34, AMETHYST: 35, MYTHRIL: 36, VOIDROCK: 37, WOOL: 38
+    DEEPSLATE: 34, AMETHYST: 35, MYTHRIL: 36, VOIDROCK: 37, WOOL: 38,
+    GLASS: 39, TORCH: 40
   };
 
   function paintAll() {
@@ -131,6 +132,15 @@ var Textures = (function () {
     for (var wy = 0; wy < TILE; wy += 4) for (var wx = 0; wx < TILE; wx += 4) {
       px(6, 4, wx + 1, wy + 1, "#ddd6c6"); px(6, 4, wx + 2, wy + 2, "#e8e2d4");
     }
+    fill(7, 4, "#c8eef5", ["#b8e4ee", "#dcf6fb", "#ffffff"]);                       // glass
+    g.strokeStyle = "#8ec4d0"; g.strokeRect(7 * TILE + 0.5, 4 * TILE + 0.5, 15, 15);
+    px(7, 4, 3, 3, "#ffffff"); px(7, 4, 4, 4, "#ffffff");
+
+    clearTile(0, 5);                                                                // torch (cross)
+    for (var ty = 4; ty < 16; ty++) px(0, 5, 7, ty, "#6b4a2a"), px(0, 5, 8, ty, "#5e3f22");
+    [[6,1],[7,0],[8,0],[9,1],[7,1],[8,1],[6,2],[9,2],[7,2],[8,2],[7,3],[8,3]].forEach(function (p) {
+      px(0, 5, p[0], p[1], p[1] < 2 ? "#ffe66b" : "#ff9a3c");
+    });
   }
 
   // map tile constant -> [tx, ty]

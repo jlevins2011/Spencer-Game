@@ -1,8 +1,8 @@
 "use strict";
 /* ============================================================
-   NPCs — Olivia and Penelope, blocky Minecraft-style helper
-   characters who hang out near spawn in every world and give
-   little reading quests.
+   NPCs — Olivia and Penelope (helpers), Daddy, Mommy with her
+   teacup, and Maggie the beagle. Helpers give reading quests;
+   parents give SUPER CHALLENGES with legendary rewards.
    ============================================================ */
 var NPCs = (function () {
   var npcs = [];       // { def, group, hitbox, home:{x,z}, target:{x,z}, ... }
@@ -135,6 +135,35 @@ var NPCs = (function () {
       return { group: group, hitbox: hitD };
     }
 
+    if (def.mommy) {
+      // Mommy: dark brown hair, tea in hand, a bit taller than the kids
+      box(0.22, 0.6, 0.22, pants, -0.14, 0.3, 0);
+      box(0.22, 0.6, 0.22, pants,  0.14, 0.3, 0);
+      box(0.5, 0.65, 0.28, shirt, 0, 0.92, 0);
+      box(0.16, 0.58, 0.16, skin, -0.34, 0.9, 0);               // left arm
+      box(0.16, 0.5, 0.16, skin,  0.36, 0.95, 0.12);            // right arm, held forward
+      var headMatsM = [hair, hair, hair, hair, face, hair];
+      box(0.45, 0.45, 0.45, headMatsM, 0, 1.5, 0);
+      box(0.49, 0.12, 0.49, hair, 0, 1.76, 0);                  // dark hair on top
+      box(0.45, 0.55, 0.12, hair, 0, 1.35, -0.24);              // long hair in back
+      // teacup in the forward right hand
+      var cup = new THREE.MeshLambertMaterial({ color: 0xf4eee0 });
+      var tea = new THREE.MeshLambertMaterial({ color: 0x6b3a1e });
+      box(0.12, 0.1, 0.12, cup, 0.42, 1.18, 0.28);
+      box(0.08, 0.03, 0.08, tea, 0.42, 1.24, 0.28);
+      box(0.03, 0.06, 0.08, cup, 0.50, 1.18, 0.28);             // handle
+      var labelM = makeNameSprite(def.name);
+      labelM.position.set(0, 2.15, 0);
+      group.add(labelM);
+      var hitM = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 2.3, 1.1),
+        new THREE.MeshBasicMaterial({ visible: false })
+      );
+      hitM.position.set(0, 1.1, 0);
+      group.add(hitM);
+      return { group: group, hitbox: hitM };
+    }
+
     // legs, body, arms
     box(0.22, 0.55, 0.22, pants, -0.14, 0.275, 0);
     box(0.22, 0.55, 0.22, pants,  0.14, 0.275, 0);
@@ -169,15 +198,15 @@ var NPCs = (function () {
   function placeAll(spawnX, spawnZ) {
     npcs.forEach(function (n) { scene.remove(n.group); });
     npcs = [];
-    var cast = CONFIG.ACTIVE.helpers.concat([CONFIG.DADDY, CONFIG.MAGGIE]);
+    var cast = CONFIG.ACTIVE.helpers.concat([CONFIG.DADDY, CONFIG.MOMMY, CONFIG.MAGGIE]);
     cast.forEach(function (def, i) {
       var model = buildModel(def);
-      var hx = spawnX + [4, -4, 0, -2][i];
-      var hz = spawnZ + [3, 4, -5, -2][i];
+      var hx = spawnX + [4, -4, 0, 5, -2][i];
+      var hz = spawnZ + [3, 4, -5, -3, -2][i];
       var n = {
         def: def, group: model.group, hitbox: model.hitbox,
         home: { x: hx, z: hz }, target: null, moveT: 0, faceYaw: 0,
-        speed: def.daddy ? 0.45 : (def.dog ? 1.8 : 1.1)   // Daddy limps; Maggie zooms
+        speed: def.daddy ? 0.45 : (def.dog ? 1.8 : 1.1)
       };
       model.hitbox.userData.npc = n;
       positionOnGround(n, hx, hz);

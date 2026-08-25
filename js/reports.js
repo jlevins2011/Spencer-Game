@@ -130,7 +130,8 @@ var Reports = (function () {
     lines.push("Lifetime: " + s.lifetime.challenges + " challenges, " +
       s.lifetime.blocksMined + " blocks mined, " + s.lifetime.blocksPlaced +
       " blocks built, " + s.lifetime.quests + " sibling quests, " +
-      Save.data.daddy.wins + " of Daddy's super challenges won.");
+      (Save.data.daddy && Save.data.daddy.wins || 0) + " of Daddy's super challenges won, " +
+      (Save.data.mommy && Save.data.mommy.wins || 0) + " of Mommy's.");
     return lines.join("\n");
   }
 
@@ -221,7 +222,9 @@ var Reports = (function () {
 
       "<div class='pr-section'><b>Lifetime:</b> " + s.lifetime.challenges + " challenges · " +
       s.lifetime.blocksMined + " mined · " + s.lifetime.blocksPlaced + " built · " +
-      s.lifetime.quests + " quests · 🔥 " + Save.data.daddy.wins + " Daddy super-challenge wins</div>" +
+      s.lifetime.quests + " quests · 🔥 " + (Save.data.daddy && Save.data.daddy.wins || 0) +
+      " Daddy · ☕ " + (Save.data.mommy && Save.data.mommy.wins || 0) +
+      " Mommy super-challenge wins</div>" +
 
       "<div class='pr-section'><b>📧 Weekly email reports</b> (every " + CONFIG.REPORT_EVERY_DAYS + " days, per kid)<br>" +
       (getEmails().length
