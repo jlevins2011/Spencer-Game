@@ -159,7 +159,7 @@ var UI = (function () {
 
   /* ---------------- challenge: hear & find ---------------- */
   function showPick(ch, onDone, intro) {
-    var mistakes = 0;
+    var mistakes = 0, done = false;
     var html =
       "<div class='ch-title'>" + (intro || "🔮 Word Ore!") + "</div>" +
       "<div class='ch-sub'>Tap the word you hear!</div>" +
@@ -173,7 +173,9 @@ var UI = (function () {
       b.textContent = word;
       b.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
+        if (done) return;
         if (word === ch.word) {
+          done = true;
           GameAudio.sfx.correct();
           b.classList.add("right");
           celebrate($("overlay-card"));
@@ -199,7 +201,7 @@ var UI = (function () {
 
   /* ---------------- challenge: build the word ---------------- */
   function showSpell(ch, onDone, introText) {
-    var mistakes = 0, next = 0, missesHere = 0;
+    var mistakes = 0, next = 0, missesHere = 0, done = false;
     var html =
       "<div class='ch-title'>" + (introText || "🧰 Locked Chest!") + "</div>" +
       "<div class='ch-sub'>Build the word" + (ch.emoji ? " for " + ch.emoji : "") + "</div>" +
@@ -222,7 +224,7 @@ var UI = (function () {
       b.textContent = letter.toUpperCase();
       b.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
-        if (b.classList.contains("used")) return;
+        if (done || b.classList.contains("used")) return;
         if (letter === ch.word[next]) {
           GameAudio.sfx.pop();
           GameAudio.sayLetter(letter);
@@ -232,6 +234,7 @@ var UI = (function () {
           next++;
           missesHere = 0;
           if (next >= ch.word.length) {
+            done = true;
             GameAudio.sfx.correct();
             setTimeout(function () { GameAudio.say(ch.word + "! Great job!"); }, 250);
             celebrate($("overlay-card"));
@@ -263,7 +266,7 @@ var UI = (function () {
 
   /* ---------------- challenge: read the sentence ---------------- */
   function showSentence(ch, onDone, introText) {
-    var mistakes = 0;
+    var mistakes = 0, done = false;
     var html =
       "<div class='ch-title'>" + (introText || "📜 Secret Message!") + "</div>" +
       "<div class='sentence-text'>" + ch.text + "</div>" +
@@ -278,7 +281,9 @@ var UI = (function () {
       b.textContent = emoji;
       b.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
+        if (done) return;
         if (emoji === ch.answer) {
+          done = true;
           GameAudio.sfx.correct();
           b.classList.add("right");
           celebrate($("overlay-card"));
@@ -366,7 +371,7 @@ var UI = (function () {
       "<button class='ghost-btn' id='dlg-later'>Maybe later</button>";
     openOverlay(html);
     GameAudio.sfx.quest();
-    var mistakes = 0;
+    var mistakes = 0, answered = false;
     var grid = $("dlg-grid");
     choices.forEach(function (icon) {
       var b = document.createElement("button");
@@ -374,7 +379,9 @@ var UI = (function () {
       b.textContent = icon;
       b.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
+        if (answered) return;
         if (icon === quest.icon) {
+          answered = true;
           GameAudio.sfx.correct();
           Stats.recordChallenge({ moduleId: "reading", kind: "sentence", skill: "sentences", word: "" }, { correct: true, mistakes: mistakes });
           Quests.start(name, quest);

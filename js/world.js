@@ -110,8 +110,8 @@ var World = (function () {
   var seedBase = 0;
   function hash2(x, z) {
     var h = (x * 374761393 + z * 668265263 + seedBase * 1442695041) | 0;
-    h = (h ^ (h >> 13)) | 0; h = Math.imul(h, 1274126177);
-    return ((h ^ (h >> 16)) >>> 0) / 4294967295;
+    h = (h ^ (h >>> 13)) | 0; h = Math.imul(h, 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
   }
   function smooth(t) { return t * t * (3 - 2 * t); }
   function noise2(x, z) {
@@ -194,9 +194,9 @@ var World = (function () {
       } else if (def.flowers && r2 > 0.5 && r2 < 0.5 + def.flowers) {
         data[idx(x, above, z)] = def.id === "mushroom" ? B.MUSH_SMALL :
           (hash2(x, z) < 0.5 ? B.FLOWER_RED : B.FLOWER_YELLOW);
-      } else if (r2 > 0.994) {
+      } else if (r2 > 0.9915) {
         data[idx(x, above, z)] = B.WORD_ORE;      // surface word ore
-      } else if (r2 > 0.9925) {
+      } else if (r2 > 0.9855) {
         data[idx(x, above, z)] = B.CHEST;         // surface treasure chest
       }
     }
