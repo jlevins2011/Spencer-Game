@@ -9,10 +9,26 @@ var UI = (function () {
 
   var RANKS = ["Wood Explorer", "Stone Miner", "Iron Adventurer", "Gold Builder",
     "Redstone Whiz", "Emerald Explorer", "Diamond Hero", "Obsidian Champion",
-    "Netherite Legend", "Ender Master"];
+    "Netherite Legend", "Ender Master",
+    // the ladder keeps going — earning these should take a while!
+    "Dragon Rider", "Wither Slayer", "Beacon Builder", "Elytra Flyer",
+    "Shulker Seeker", "Totem Keeper", "Trident Champion", "Ancient Explorer",
+    "Sculk Sage", "Warden Whisperer", "Amethyst Architect", "Deepslate Legend",
+    "Nether Star Noble", "Crystal Sorcerer", "Sky Fortress Builder",
+    "Void Voyager", "Galaxy Miner", "Infinity Crafter", "Master of Worlds",
+    "CRAFT LEGEND"];
 
-  function rankFor(level) { return RANKS[Math.min(level - 1, RANKS.length - 1)]; }
-  function xpNeeded(level) { return 60 + (level - 1) * 20; }
+  function rankFor(level) {
+    if (level <= RANKS.length) return RANKS[level - 1];
+    return "Craft Legend " + (level - RANKS.length + 1);   // endless prestige
+  }
+
+  // Each level costs more than the last (quadratic): early levels come
+  // quickly for beginners, high levels are genuine long-term goals.
+  function xpNeeded(level) {
+    var n = level - 1;
+    return 60 + n * 30 + n * n * 10;
+  }
 
   /* ---------------- toast ---------------- */
   var toastTimer = null;
