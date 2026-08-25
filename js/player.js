@@ -79,7 +79,10 @@ var Player = (function () {
     collide("x", vx * dt);
     collide("z", vz * dt);
 
-    // fell off the island? teleport back up
+    // invisible walls at the edge of the island
+    pos.x = Math.max(1, Math.min(World.SX - 1, pos.x));
+    pos.z = Math.max(1, Math.min(World.SZ - 1, pos.z));
+    // safety net: if he somehow falls through, pop back to spawn
     if (pos.y < -12) spawnAt(World.SX / 2, World.SZ / 2);
 
     // footsteps

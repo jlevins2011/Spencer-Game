@@ -47,6 +47,8 @@ var Game = (function () {
       clouds.push(cloud);
     }
 
+    window.__dbg = { scene: scene, camera: camera, renderer: renderer };
+
     World.init(scene);
     NPCs.init(scene);
     Player.init(camera);
@@ -67,7 +69,7 @@ var Game = (function () {
     Save.save();
     var def = World.loadWorld(worldId);
     scene.background = new THREE.Color(def.sky);
-    scene.fog = new THREE.Fog(def.fog, 40, 160);
+    scene.fog = new THREE.Fog(def.fog, 70, 260);
     var sx = Math.floor(World.SX / 2), sz = Math.floor(World.SZ / 2);
     Player.spawnAt(sx, sz);
     NPCs.placeAll(sx, sz);

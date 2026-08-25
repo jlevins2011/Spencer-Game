@@ -515,6 +515,7 @@ var UI = (function () {
   }
 
   function init() {
+    document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     $("btn-play").addEventListener("pointerdown", function () {
       GameAudio.unlock();
       GameAudio.say("Welcome to Spencer craft!");
