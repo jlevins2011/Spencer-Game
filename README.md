@@ -39,19 +39,29 @@ back around more often until they're nailed. Leveling up unlocks new worlds:
 Sunny Meadow → Golden Desert (Lv 3) → Snowy Peaks (Lv 5) → Mushroom Isle (Lv 7) → Crystal Caves (Lv 9).
 (Penelope starts at level 3.)
 
-## Weekly parent reports (2-minute setup)
+## Weekly parent reports (1-minute setup, no accounts)
 
-1. Go to [formspree.io](https://formspree.io) and create a free account
-2. Create a new form pointed at your email address
-3. Copy the endpoint URL it gives you (looks like `https://formspree.io/f/abcdwxyz`)
-4. Open `js/config.js` and paste it into `REPORT_ENDPOINT`
+1. On the kids' iPad, hold the **GROWN-UPS** button (title screen or pause
+   menu) for 1.5 seconds
+2. Type a parent email in the box and tap **ADD** — add as many emails as
+   you like (mom, dad, grandma…)
+3. Tap **SEND REPORT NOW**. The first send triggers a one-time "activate"
+   email to each address (from formsubmit.co, the free relay service) —
+   click the link in it once
 
-That's it — a progress report emails you automatically every 7 days per kid,
-covering time played, accuracy by skill, mastered words, and exactly which
-words they're finding tricky.
+Done — every kid's progress report emails everyone on the list automatically
+every 7 days: time played, accuracy by skill, mastered words, and exactly
+which words they're finding tricky. Each address can be removed anytime with
+the ✕ next to it.
 
-No email needed? Hold the **GROWN-UPS** button (on the title screen or pause
-menu) for 1.5 seconds to see the same report in-game any time.
+Notes:
+- Emails added in the dashboard are stored on that device (private, not in
+  this repo). `REPORT_EMAILS` in `js/config.js` can hold defaults instead,
+  and Formspree-style endpoint URLs still work via `REPORT_ENDPOINTS`.
+- Reports are sent while the game is being played, from the kids' device —
+  so add the emails on the iPad they actually use.
+- No email at all? The same report is always available in the GROWN-UPS
+  dashboard.
 
 ## For tweakers
 
