@@ -37,10 +37,17 @@ var CONFIG = {
   PEACEFUL: true,
 
   // -------- Weekly parent reports --------
-  // 2-minute setup: create a free form at https://formspree.io,
-  // point it at your email, and paste the endpoint URL here, e.g.
-  // REPORT_ENDPOINT: "https://formspree.io/f/abcdwxyz",
-  REPORT_ENDPOINT: "",
+  // EASIEST SETUP: don't edit anything here! Open the game on the
+  // kids' iPad, hold GROWN-UPS, and add parent emails right in the
+  // dashboard. Reports send free via formsubmit.co — the first
+  // report triggers a one-time "activate" email to each address.
+  //
+  // Optional: emails listed here are built-in defaults (note: this
+  // file is public if the repo is public, so the dashboard method
+  // above is more private).
+  REPORT_EMAILS: [],
+  // Optional: full form endpoints (e.g. Formspree URLs) also work.
+  REPORT_ENDPOINTS: [],
   REPORT_EVERY_DAYS: 7,
 
   // -------- Difficulty tuning --------
