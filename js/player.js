@@ -108,14 +108,23 @@ var Player = (function () {
     var hits = raycaster.intersectObjects(World.meshes, false);
     if (!hits.length) return null;
     var hit = hits[0];
-    var n = hit.face.normal;
     var p = hit.point;
-    var bx = Math.floor(p.x - n.x * 0.5);
-    var by = Math.floor(p.y - n.y * 0.5);
-    var bz = Math.floor(p.z - n.z * 0.5);
+    // step a hair along the ray: just past the surface = the block hit,
+    // just before it = where a new block goes. (Unlike face normals,
+    // this also works for flowers' diagonal cross-planes.)
+    var d = raycaster.ray.direction;
+    var e = 0.005;
     return {
-      block: { x: bx, y: by, z: bz },
-      place: { x: bx + n.x, y: by + n.y, z: bz + n.z },
+      block: {
+        x: Math.floor(p.x + d.x * e),
+        y: Math.floor(p.y + d.y * e),
+        z: Math.floor(p.z + d.z * e)
+      },
+      place: {
+        x: Math.floor(p.x - d.x * e),
+        y: Math.floor(p.y - d.y * e),
+        z: Math.floor(p.z - d.z * e)
+      },
       distance: hit.distance,
       point: p
     };
