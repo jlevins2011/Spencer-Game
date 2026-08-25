@@ -5,16 +5,20 @@
    regenerates from the seed and edits replay on top.
    ============================================================ */
 var Save = (function () {
+  var activeKey = null;
+
   function freshData() {
+    var startLevel = (CONFIG.ACTIVE && CONFIG.ACTIVE.startLevel) || 1;
     return {
       version: 2,
       player: {
-        xp: 0, level: 1, gems: 0,
+        xp: 0, level: startLevel, gems: 0,
         pickTier: 0,                 // 0 wood, 1 stone, 2 iron, 3 diamond
         world: "meadow",
         inventory: {}                // blockName -> count
       },
       reading: { tier: 0, tierWins: 0 },
+      spelling: { tier: 0, tierWins: 0 },
       worlds: {},                    // worldId -> { edits: {"x,y,z": blockId} }
       quests: { active: null, completed: 0 },
       stats: {
@@ -31,9 +35,12 @@ var Save = (function () {
 
   var data = freshData();
 
-  function load() {
+  // profile: an entry from CONFIG.PLAYERS
+  function load(profile) {
+    activeKey = profile.saveKey;
+    data = freshData();
     try {
-      var raw = localStorage.getItem(CONFIG.SAVE_KEY);
+      var raw = localStorage.getItem(activeKey);
       if (raw) {
         var parsed = JSON.parse(raw);
         if (parsed && parsed.version === 2) {
@@ -49,17 +56,28 @@ var Save = (function () {
 
   var saveTimer = null;
   function save() {
-    if (saveTimer) return;
+    if (saveTimer || !activeKey) return;
     saveTimer = setTimeout(function () {
       saveTimer = null;
-      try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(data)); } catch (e) {}
+      try { localStorage.setItem(activeKey, JSON.stringify(data)); } catch (e) {}
     }, 250);
   }
 
   function reset() {
     data = freshData();
     Save.data = data;
-    try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(data)); } catch (e) {}
+    if (activeKey) {
+      try { localStorage.setItem(activeKey, JSON.stringify(data)); } catch (e) {}
+    }
+  }
+
+  // read another profile's level without switching to it (title screen)
+  function peekLevel(profile) {
+    try {
+      var raw = localStorage.getItem(profile.saveKey);
+      if (raw) return JSON.parse(raw).player.level;
+    } catch (e) {}
+    return null;
   }
 
   function worldEdits(worldId) {
@@ -67,7 +85,7 @@ var Save = (function () {
     return data.worlds[worldId].edits;
   }
 
-  return { load: load, save: save, reset: reset, worldEdits: worldEdits, data: data };
+  return { load: load, save: save, reset: reset, worldEdits: worldEdits, peekLevel: peekLevel, data: data };
 })();
 
 

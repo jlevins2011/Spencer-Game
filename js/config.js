@@ -1,26 +1,40 @@
 "use strict";
 /* ============================================================
-   SPENCERCRAFT — CONFIG
+   CRAFTWORLDS — CONFIG
    Everything a parent might want to tweak lives here.
    ============================================================ */
 var CONFIG = {
-  PLAYER_NAME: "Spencer",
-
-  // In-game helper characters (his sisters!)
-  SISTERS: [
-    { name: "Olivia",   hair: "#6b4226", shirt: "#9b59d0", role: "oldest"  },
-    { name: "Penelope", hair: "#e8b84a", shirt: "#3ba7d9", role: "middle"  }
+  // The kids. Each gets their own save, learning module, difficulty
+  // and weekly report. Their siblings appear as in-game helpers.
+  PLAYERS: [
+    {
+      id: "spencer", name: "Spencer", emoji: "⛏️",
+      module: "reading",                    // learns: reading (age 7)
+      saveKey: "spencercraft_save_v2",      // original key: keeps his progress
+      startLevel: 1,
+      helpers: [
+        { name: "Olivia",   hair: "#6b4226", shirt: "#9b59d0" },
+        { name: "Penelope", hair: "#8a5433", shirt: "#3ba7d9" }
+      ]
+    },
+    {
+      id: "penelope", name: "Penelope", emoji: "✨",
+      module: "spelling",                   // learns: spelling (age 10)
+      saveKey: "craftworlds_save_penelope",
+      startLevel: 3,                        // 10yo: skip the baby ramp
+      helpers: [
+        { name: "Olivia",  hair: "#6b4226", shirt: "#9b59d0" },
+        { name: "Spencer", hair: "#5a3a1e", shirt: "#3fae5f", boy: true }
+      ]
+    }
   ],
 
-  // Peaceful mode: no monsters, nothing can hurt him.
-  // Flip to false later if you ever add mobs (engine hooks exist,
-  // but no combat is implemented yet).
-  PEACEFUL: true,
+  // Set when a player is chosen on the title screen.
+  ACTIVE: null,
+  PLAYER_NAME: "",
 
-  // Which learning modules are active. Only "reading" exists today.
-  // To add e.g. math later: create js/modules/math.js that calls
-  // Learning.registerModule({...}) and add "math" here.
-  MODULES: ["reading"],
+  // Peaceful mode: no monsters, nothing can hurt them.
+  PEACEFUL: true,
 
   // -------- Weekly parent reports --------
   // 2-minute setup: create a free form at https://formspree.io,
@@ -30,10 +44,6 @@ var CONFIG = {
   REPORT_EVERY_DAYS: 7,
 
   // -------- Difficulty tuning --------
-  // Wins-in-a-row-ish score needed before the reading tier ramps up.
-  TIER_UP_WINS: 12,
-  // Fraction of challenges that quietly review easier material.
-  REVIEW_CHANCE: 0.2,
-
-  SAVE_KEY: "spencercraft_save_v2"
+  TIER_UP_WINS: 12,      // clean wins needed before difficulty ramps
+  REVIEW_CHANCE: 0.2     // fraction of challenges that review easier material
 };
