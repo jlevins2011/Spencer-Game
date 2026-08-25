@@ -162,7 +162,7 @@ var UI = (function () {
     var mistakes = 0, done = false;
     var html =
       "<div class='ch-title'>" + (intro || "🔮 Word Ore!") + "</div>" +
-      "<div class='ch-sub'>Tap the word you hear!</div>" +
+      "<div class='ch-sub'>" + (ch.subtitle || "Tap the word you hear!") + "</div>" +
       "<button class='speak-btn' id='ch-speak'>🔊</button>" +
       "<div class='word-grid' id='ch-grid'></div>";
     openOverlay(html);
@@ -515,19 +515,50 @@ var UI = (function () {
     $("home").style.display = "flex";
     $("hud").style.display = "none";
     Controls.setEnabled(false);
+    renderPlayerButtons();
   }
   function hideHome() {
     $("home").style.display = "none";
     $("hud").style.display = "block";
   }
 
+  function selectPlayer(profile) {
+    CONFIG.ACTIVE = profile;
+    CONFIG.PLAYER_NAME = profile.name;
+    try { localStorage.setItem("craftworlds_last_player", profile.id); } catch (e) {}
+    Save.load(profile);
+    GameAudio.unlock();
+    GameAudio.say("Let's go, " + profile.name + "!");
+    Game.start();
+  }
+
+  function renderPlayerButtons() {
+    var wrap = $("player-buttons");
+    wrap.innerHTML = "";
+    CONFIG.PLAYERS.forEach(function (p) {
+      var lvl = Save.peekLevel(p);
+      var b = document.createElement("button");
+      b.className = "mc-btn player-btn";
+      b.innerHTML = p.emoji + " " + p.name.toUpperCase() +
+        "<span class='player-lvl'>" + (lvl ? "Lv " + lvl + " · " + rankFor(lvl) : "New game!") + "</span>";
+      b.addEventListener("pointerdown", function () { selectPlayer(p); });
+      wrap.appendChild(b);
+    });
+  }
+
+  // ensure some profile is loaded (home-screen grown-ups button)
+  function ensureProfile() {
+    if (CONFIG.ACTIVE) return;
+    var lastId = null;
+    try { lastId = localStorage.getItem("craftworlds_last_player"); } catch (e) {}
+    var profile = CONFIG.PLAYERS.find(function (p) { return p.id === lastId; }) || CONFIG.PLAYERS[0];
+    CONFIG.ACTIVE = profile;
+    CONFIG.PLAYER_NAME = profile.name;
+    Save.load(profile);
+  }
+
   function init() {
     document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-    $("btn-play").addEventListener("pointerdown", function () {
-      GameAudio.unlock();
-      GameAudio.say("Welcome to Spencer craft!");
-      Game.start();
-    });
     $("btn-pause").addEventListener("pointerdown", function (e) { e.stopPropagation(); showPause(); });
     $("btn-mode").addEventListener("pointerdown", function (e) { e.stopPropagation(); Game.toggleMode(); });
     $("btn-craft").addEventListener("pointerdown", function (e) { e.stopPropagation(); doCraft(); });
@@ -536,7 +567,7 @@ var UI = (function () {
     ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) {
       jb.addEventListener(ev, function () { Player.jump = false; });
     });
-    holdToOpen($("btn-home-parent"), showParent);
+    holdToOpen($("btn-home-parent"), function () { ensureProfile(); showParent(); });
   }
 
   return {

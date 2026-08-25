@@ -45,6 +45,12 @@ html, body {
 }
 .mc-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #2e6f20; }
 
+#player-buttons { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; }
+.player-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 240px; }
+.player-btn .player-lvl { font-size: 10px; opacity: .85; }
+#player-buttons .player-btn:nth-child(2) { background: #4a90d9; border-color: #2a5a94; box-shadow: 0 8px 0 #2a5a94; }
+#player-buttons .player-btn:nth-child(2):active { box-shadow: 0 2px 0 #2a5a94; }
+
 #btn-home-parent {
   position: absolute; bottom: 14px; right: 14px;
   font-family: inherit; font-size: 9px; padding: 12px 14px;

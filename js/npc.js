@@ -65,8 +65,8 @@ var NPCs = (function () {
     box(0.45, 0.45, 0.45, headMats, 0, 1.4, 0);
     // hair on top
     box(0.49, 0.12, 0.49, hair, 0, 1.66, 0);
-    // long hair in back
-    box(0.45, 0.5, 0.1, hair, 0, 1.3, -0.24);
+    // long hair in back (girls only)
+    if (!def.boy) box(0.45, 0.5, 0.1, hair, 0, 1.3, -0.24);
 
     var label = makeNameSprite(def.name);
     label.position.set(0, 2.05, 0);
@@ -88,7 +88,7 @@ var NPCs = (function () {
   function placeAll(spawnX, spawnZ) {
     npcs.forEach(function (n) { scene.remove(n.group); });
     npcs = [];
-    CONFIG.SISTERS.forEach(function (def, i) {
+    CONFIG.ACTIVE.helpers.forEach(function (def, i) {
       var model = buildModel(def);
       var hx = spawnX + (i === 0 ? 4 : -4);
       var hz = spawnZ + (i === 0 ? 3 : 4);
@@ -159,7 +159,7 @@ var Quests = (function () {
   function active() { return Save.data.quests.active; }
 
   function pickQuest() {
-    var tier = Save.data.reading.tier;
+    var tier = Learning.currentTier();
     var pool = CURRICULUM.QUESTS.filter(function (q) { return q.tier <= tier; });
     var current = pool.filter(function (q) { return q.tier === tier; });
     var from = (current.length && Math.random() < 0.7) ? current : pool;

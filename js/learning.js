@@ -4,9 +4,9 @@
    A small pluggable system. Modules register themselves and the
    game asks the engine for challenges at gameplay moments
    ("kind" describes the moment: pick / spell / sentence).
-   Today only the reading module exists; a future math module
-   would register the same way and CONFIG.MODULES decides what
-   is active.
+   Reading (Spencer) and spelling (Penelope) modules exist; a
+   future math module would register the same way, and each
+   player profile in CONFIG.PLAYERS names the module it uses.
 
    The engine also owns adaptive difficulty:
    - tierScore rises on clean wins, falls on misses
@@ -19,13 +19,9 @@ var Learning = (function () {
 
   function registerModule(mod) { modules[mod.id] = mod; }
 
+  // Each player profile names its module (reading / spelling / ...).
   function activeModule() {
-    // With multiple modules we would rotate/weight here.
-    for (var i = 0; i < CONFIG.MODULES.length; i++) {
-      var m = modules[CONFIG.MODULES[i]];
-      if (m) return m;
-    }
-    return null;
+    return CONFIG.ACTIVE ? modules[CONFIG.ACTIVE.module] : null;
   }
 
   // kind: "pick" (hear & find), "spell" (build the word), "sentence"
@@ -40,7 +36,20 @@ var Learning = (function () {
     Stats.recordChallenge(challenge, result);
   }
 
-  return { registerModule: registerModule, getChallenge: getChallenge, reportResult: reportResult };
+  function currentTier() {
+    var mod = activeModule();
+    return mod && mod.tier ? mod.tier() : 0;
+  }
+
+  function currentFocus() {
+    var mod = activeModule();
+    return mod && mod.focus ? mod.focus() : { name: "", focus: "" };
+  }
+
+  return {
+    registerModule: registerModule, getChallenge: getChallenge,
+    reportResult: reportResult, currentTier: currentTier, currentFocus: currentFocus
+  };
 })();
 
 
@@ -96,6 +105,11 @@ var Learning = (function () {
   function getChallenge(kind) {
     var tierIdx = pickTierIndex();
     var tier = CURRICULUM.TIERS[tierIdx];
+
+    // a slice of word-ore moments become read-the-sentence instead
+    if (kind === "pick" && Math.random() < 0.25 && tier.sentences.length) {
+      kind = "sentence";
+    }
 
     if (kind === "sentence") {
       var s = tier.sentences[Math.floor(Math.random() * tier.sentences.length)];
@@ -156,5 +170,14 @@ var Learning = (function () {
     Save.save();
   }
 
-  Learning.registerModule({ id: "reading", getChallenge: getChallenge, reportResult: reportResult });
+  Learning.registerModule({
+    id: "reading",
+    getChallenge: getChallenge,
+    reportResult: reportResult,
+    tier: function () { return state().tier; },
+    focus: function () {
+      var t = CURRICULUM.TIERS[currentTier()];
+      return { name: t.name, focus: t.focus };
+    }
+  });
 })();

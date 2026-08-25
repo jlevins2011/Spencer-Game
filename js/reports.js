@@ -35,15 +35,17 @@ var Reports = (function () {
   var SKILL_LABELS = {
     sight: "Sight words (recognize on sight)",
     phonics: "Phonics (sounding out)",
-    sentences: "Sentence reading"
+    sentences: "Sentence reading",
+    spot: "Spotting correct spellings",
+    spelling: "Spelling words out"
   };
 
   function buildTextReport() {
     var s = Save.data.stats;
     var p = Save.data.player;
-    var tier = CURRICULUM.TIERS[Save.data.reading.tier];
+    var tier = Learning.currentFocus();
     var lines = [];
-    lines.push("SPENCERCRAFT — WEEKLY READING REPORT for " + CONFIG.PLAYER_NAME);
+    lines.push("CRAFTWORLDS — WEEKLY PROGRESS REPORT for " + CONFIG.PLAYER_NAME);
     lines.push("Week of " + new Date(s.weekStart).toLocaleDateString());
     lines.push("");
     lines.push("PLAY THIS WEEK");
@@ -51,19 +53,19 @@ var Reports = (function () {
     lines.push("- Days played: " + s.daysPlayed.length);
     lines.push("- Game level: " + p.level + " (" + UI.rankFor(p.level) + "), " + p.gems + " gems");
     lines.push("");
-    lines.push("READING PRACTICE");
+    lines.push("PRACTICE THIS WEEK");
     Object.keys(s.challenges).forEach(function (k) {
       var c = s.challenges[k];
       var acc = accuracy(c);
       lines.push("- " + (SKILL_LABELS[k] || k) + ": " + c.tries + " tries, " +
         (acc === null ? "n/a" : acc + "% right on the first try"));
     });
-    if (!Object.keys(s.challenges).length) lines.push("- (no reading challenges this week)");
+    if (!Object.keys(s.challenges).length) lines.push("- (no challenges this week)");
     lines.push("");
     lines.push("CURRENT FOCUS: " + tier.name + " — " + tier.focus);
     lines.push("");
     var struggles = struggleWords();
-    lines.push("WORDS HE'S FINDING TRICKY" + (struggles.length ? ":" : ": none this week 🎉"));
+    lines.push("TRICKY WORDS" + (struggles.length ? ":" : ": none this week 🎉"));
     struggles.forEach(function (w) { lines.push("- " + w); });
     if (struggles.length) {
       lines.push("");
@@ -73,7 +75,7 @@ var Reports = (function () {
     var mastered = masteredWords();
     if (mastered.length) {
       lines.push("");
-      lines.push("WORDS HE'S NAILED: " + mastered.join(", "));
+      lines.push("WORDS NAILED: " + mastered.join(", "));
     }
     lines.push("");
     lines.push("Lifetime: " + s.lifetime.challenges + " reading challenges, " +
@@ -88,7 +90,7 @@ var Reports = (function () {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({
-        subject: "SpencerCraft weekly report — " + CONFIG.PLAYER_NAME,
+        subject: "CraftWorlds weekly report — " + CONFIG.PLAYER_NAME,
         message: buildTextReport()
       })
     }).then(function (r) {
@@ -115,7 +117,7 @@ var Reports = (function () {
   function dashboardHtml() {
     var s = Save.data.stats;
     var p = Save.data.player;
-    var tier = CURRICULUM.TIERS[Save.data.reading.tier];
+    var tier = Learning.currentFocus();
     var struggles = struggleWords();
     var mastered = masteredWords();
 
@@ -129,13 +131,13 @@ var Reports = (function () {
     var craft = UI.nextCraftInfo();
 
     return "" +
-      "<div class='ch-title'>👨‍👩‍👧 Grown-Ups Report</div>" +
+      "<div class='ch-title'>👨‍👩‍👧 Grown-Ups Report: " + CONFIG.PLAYER_NAME + "</div>" +
       "<div class='parent-scroll'>" +
       "<div class='pr-section'><b>This week</b><br>" +
       "⏱ " + fmtMinutes(s.playMs) + " over " + s.daysPlayed.length + " day(s) · " +
       "Level " + p.level + " (" + UI.rankFor(p.level) + ") · 💎 " + p.gems + "</div>" +
 
-      "<div class='pr-section'><b>Reading practice</b>" +
+      "<div class='pr-section'><b>Practice</b>" +
       (skillRows ? "<table class='pr-table'><tr><th>Skill</th><th>Tries</th><th>First-try</th></tr>" + skillRows + "</table>"
                  : "<br>No challenges yet this week.") + "</div>" +
 

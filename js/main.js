@@ -204,10 +204,11 @@ var Game = (function () {
       grantItem(m.def.drop, 1);
       grantXP(1);
     }
-    // occasionally the sisters cheer him on
+    // occasionally the helpers cheer them on
     if (Math.random() < 0.02) {
-      var sis = CONFIG.SISTERS[Math.floor(Math.random() * CONFIG.SISTERS.length)];
-      UI.toast("👧 " + sis.name + ": Nice mining, " + CONFIG.PLAYER_NAME + "!");
+      var helpers = CONFIG.ACTIVE.helpers;
+      var h = helpers[Math.floor(Math.random() * helpers.length)];
+      UI.toast((h.boy ? "👦 " : "👧 ") + h.name + ": Nice mining, " + CONFIG.PLAYER_NAME + "!");
     }
   }
 
@@ -311,13 +312,9 @@ var Game = (function () {
 
 /* ---------------- boot ---------------- */
 window.addEventListener("load", function () {
-  Save.load();
   UI.init();
   Game.init();
   UI.showHome();
-  document.getElementById("home-rank").textContent =
-    "Lv " + Save.data.player.level + " · " + UI.rankFor(Save.data.player.level) +
-    " · 💎 " + Save.data.player.gems;
   window.addEventListener("visibilitychange", function () {
     if (document.hidden) { Stats.tickPlaytime(); Save.save(); }
   });
