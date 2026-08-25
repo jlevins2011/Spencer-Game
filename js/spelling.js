@@ -154,17 +154,8 @@ var SPELLING_TIERS = [
   }
 
   function reportResult(challenge, result) {
-    var st = state();
-    if (challenge.tier === st.tier) {
-      if (result.correct && result.mistakes === 0) st.tierWins += 1;
-      else if (result.mistakes > 0) st.tierWins = Math.max(0, st.tierWins - 1);
-      if (st.tierWins >= CONFIG.TIER_UP_WINS && st.tier < SPELLING_TIERS.length - 1) {
-        st.tier += 1;
-        st.tierWins = 0;
-        UI.toast("📚 New words unlocked: " + SPELLING_TIERS[st.tier].name + "!");
-      }
-    }
-    Save.save();
+    Learning.applyRamp(state(), challenge, result, SPELLING_TIERS.length - 1,
+      function (t) { return SPELLING_TIERS[t].name; });
   }
 
   Learning.registerModule({

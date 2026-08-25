@@ -415,6 +415,19 @@ var UI = (function () {
 
   /* ---------------- sister dialogue ---------------- */
   function showDialogue(npc) {
+    if (npc.def.dog) {
+      // petting Maggie: no overlay, just joy
+      GameAudio.sfx.bark();
+      var pets = [
+        "🐶 Woof woof! Maggie wags her tail like crazy!",
+        "🐶 Maggie licks your hand! Good girl!",
+        "🐶 Maggie rolls over for belly rubs!",
+        "🐶 Maggie zooms in a happy circle around you!"
+      ];
+      toast(pets[Math.floor(Math.random() * pets.length)], 2200);
+      npc.group.rotation.y += 0.6;   // happy wiggle
+      return;
+    }
     if (npc.def.daddy) { showDaddy(npc); return; }
     var name = npc.def.name;
     var q = Quests.active();

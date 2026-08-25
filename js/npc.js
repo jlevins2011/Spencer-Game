@@ -48,7 +48,54 @@ var NPCs = (function () {
     return s;
   }
 
+  // Maggie the beagle: tricolor — white base, brown head, black saddle
+  function buildDog(def) {
+    var group = new THREE.Group();
+    var white = new THREE.MeshLambertMaterial({ color: 0xf2ede2 });
+    var brown = new THREE.MeshLambertMaterial({ color: 0x8a5a33 });
+    var black = new THREE.MeshLambertMaterial({ color: 0x2b2b2b });
+
+    function box(w, h, d, mat, x, y, z) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      m.position.set(x, y, z);
+      group.add(m);
+      return m;
+    }
+    // legs
+    box(0.09, 0.22, 0.09, white, -0.10, 0.11,  0.18);
+    box(0.09, 0.22, 0.09, white,  0.10, 0.11,  0.18);
+    box(0.09, 0.22, 0.09, white, -0.10, 0.11, -0.16);
+    box(0.09, 0.22, 0.09, white,  0.10, 0.11, -0.16);
+    // body + black saddle patch
+    box(0.28, 0.26, 0.58, white, 0, 0.35, 0);
+    box(0.30, 0.10, 0.30, black, 0, 0.50, -0.06);
+    // head (brown) + white muzzle + black nose
+    box(0.24, 0.22, 0.22, brown, 0, 0.52, 0.34);
+    box(0.12, 0.10, 0.10, white, 0, 0.47, 0.48);
+    box(0.05, 0.05, 0.04, black, 0, 0.50, 0.53);
+    // floppy ears
+    box(0.05, 0.16, 0.12, brown, -0.15, 0.48, 0.34);
+    box(0.05, 0.16, 0.12, brown,  0.15, 0.48, 0.34);
+    // tail up (white tip like a real beagle)
+    box(0.06, 0.18, 0.06, brown, 0, 0.52, -0.31);
+    box(0.06, 0.07, 0.06, white, 0, 0.64, -0.31);
+
+    var label = makeNameSprite(def.name);
+    label.scale.set(1.1, 0.28, 1);
+    label.position.set(0, 1.0, 0);
+    group.add(label);
+
+    var hit = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 1.0, 1.0),
+      new THREE.MeshBasicMaterial({ visible: false })
+    );
+    hit.position.set(0, 0.4, 0);
+    group.add(hit);
+    return { group: group, hitbox: hit };
+  }
+
   function buildModel(def) {
+    if (def.dog) return buildDog(def);
     var group = new THREE.Group();
     var skin = new THREE.MeshLambertMaterial({ color: 0xf2c9a0 });
     var shirt = new THREE.MeshLambertMaterial({ color: def.shirt });
@@ -122,15 +169,15 @@ var NPCs = (function () {
   function placeAll(spawnX, spawnZ) {
     npcs.forEach(function (n) { scene.remove(n.group); });
     npcs = [];
-    var cast = CONFIG.ACTIVE.helpers.concat([CONFIG.DADDY]);
+    var cast = CONFIG.ACTIVE.helpers.concat([CONFIG.DADDY, CONFIG.MAGGIE]);
     cast.forEach(function (def, i) {
       var model = buildModel(def);
-      var hx = spawnX + [4, -4, 0][i];
-      var hz = spawnZ + [3, 4, -5][i];
+      var hx = spawnX + [4, -4, 0, -2][i];
+      var hz = spawnZ + [3, 4, -5, -2][i];
       var n = {
         def: def, group: model.group, hitbox: model.hitbox,
         home: { x: hx, z: hz }, target: null, moveT: 0, faceYaw: 0,
-        speed: def.daddy ? 0.45 : 1.1        // Daddy limps (hurt leg!)
+        speed: def.daddy ? 0.45 : (def.dog ? 1.8 : 1.1)   // Daddy limps; Maggie zooms
       };
       model.hitbox.userData.npc = n;
       positionOnGround(n, hx, hz);
@@ -157,10 +204,11 @@ var NPCs = (function () {
         // occasional slow wander near home
         n.moveT -= dt;
         if (n.moveT <= 0) {
-          n.moveT = 4 + Math.random() * 5;
+          n.moveT = n.def.dog ? 2 + Math.random() * 3 : 4 + Math.random() * 5;
+          var r = n.def.dog ? 7 : 3;    // Maggie roams further
           n.target = {
-            x: n.home.x + (Math.random() * 6 - 3),
-            z: n.home.z + (Math.random() * 6 - 3)
+            x: n.home.x + (Math.random() * 2 - 1) * r,
+            z: n.home.z + (Math.random() * 2 - 1) * r
           };
         }
         if (n.target) {
@@ -182,7 +230,21 @@ var NPCs = (function () {
 
   function hitboxes() { return npcs.map(function (n) { return n.hitbox; }); }
 
-  return { init: init, placeAll: placeAll, update: update, hitboxes: hitboxes };
+  function getDog() {
+    for (var i = 0; i < npcs.length; i++) {
+      if (npcs[i].def.dog) return npcs[i];
+    }
+    return null;
+  }
+
+  function positionDogNear(x, z) {
+    var n = getDog();
+    if (n) positionOnGround(n, x, z);
+    return n;
+  }
+
+  return { init: init, placeAll: placeAll, update: update, hitboxes: hitboxes,
+           getDog: getDog, positionDogNear: positionDogNear };
 })();
 
 

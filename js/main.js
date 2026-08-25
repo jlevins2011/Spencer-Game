@@ -242,6 +242,50 @@ var Game = (function () {
     UI.updateHotbar();
   }
 
+  /* ---------------- Maggie's heists ---------------- */
+  var lastSteal = 0;
+  var STEAL_COOLDOWN = 120000;                 // at most one heist per 2 min
+  var STEALABLE = ["dirt", "leaves", "sand", "flower", "mushroom", "stone", "planks", "wood"];
+
+  function maggieSteal() {
+    if (!running) return;
+    var now = Date.now();
+    if (now - lastSteal < STEAL_COOLDOWN) return;
+    lastSteal = now;
+
+    // wait for the challenge overlay to close, then the heist happens
+    setTimeout(function () {
+      var inv = Save.data.player.inventory;
+      var item = null;
+      for (var i = 0; i < STEALABLE.length; i++) {
+        if (inv[STEALABLE[i]] > 0) { item = STEALABLE[i]; break; }
+      }
+      // Maggie darts in front of the player...
+      var p = Player.position, yaw = Player.yaw;
+      var n = NPCs.positionDogNear(p.x - Math.sin(yaw) * 2.5, p.z - Math.cos(yaw) * 2.5);
+      if (n) {
+        // ...then bolts with the loot
+        n.target = {
+          x: Math.max(3, Math.min(125, p.x + (Math.random() * 40 - 20))),
+          z: Math.max(3, Math.min(125, p.z + (Math.random() * 40 - 20)))
+        };
+        n.moveT = 12;
+        n.speed = 4.5;                         // zoomies!
+        setTimeout(function () { n.speed = 1.8; }, 6000);
+      }
+      GameAudio.sfx.bark();
+      if (item) {
+        inv[item] -= 1;
+        Save.save();
+        UI.updateHotbar();
+        UI.updateQuestHud();
+        UI.toast("🐶 MAGGIE!! She snatched 1 " + item + " and zoomed away! Sneaky beagle!", 3800);
+      } else {
+        UI.toast("🐶 Maggie zoomed by barking! Good thing your pockets were empty!", 3200);
+      }
+    }, 1600);
+  }
+
   function setMode(m) {
     mode = m;
     Game.mode = m;
@@ -314,7 +358,7 @@ var Game = (function () {
   return {
     init: init, start: start, interact: interact, travelTo: travelTo,
     grantXP: grantXP, grantGems: grantGems, grantItem: grantItem,
-    toggleMode: toggleMode, setMode: setMode,
+    toggleMode: toggleMode, setMode: setMode, maggieSteal: maggieSteal,
     get mode() { return mode; }, set mode(v) { mode = v; },
     get selectedItem() { return selectedItem; }, set selectedItem(v) { selectedItem = v; },
     running: false

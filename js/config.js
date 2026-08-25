@@ -55,7 +55,14 @@ var CONFIG = {
   REPORT_ENDPOINTS: [],
   REPORT_EVERY_DAYS: 7,
 
+  // Maggie the beagle: wanders the world, can be petted, and STEALS
+  // something small when a challenge goes really badly (comic relief).
+  MAGGIE: { name: "Maggie", dog: true },
+
   // -------- Difficulty tuning --------
   TIER_UP_WINS: 12,      // clean wins needed before difficulty ramps
-  REVIEW_CHANCE: 0.2     // fraction of challenges that review easier material
+  REVIEW_CHANCE: 0.2,    // fraction of challenges that review easier material
+  // struggle points before difficulty backs off a tier
+  // (a rough challenge = 1 point, a really rough one = 2; a perfect win clears them)
+  BACK_OFF_AT: 5
 };
