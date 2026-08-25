@@ -274,6 +274,12 @@ html, body {
     linear-gradient(#3a66c9, #3a66c9) left/12px 10px no-repeat,
     linear-gradient(#3a66c9, #3a66c9) right/12px 10px no-repeat;
 }
+/* Daddy portrait: glasses over the eyes */
+.npc-head.daddy::after {
+  border: 3px solid #1a1a1a; border-radius: 4px;
+  left: 11px; right: 11px; top: 31px; height: 12px;
+  box-shadow: inset 24px 0 0 -21px #1a1a1a;
+}
 
 .levelup-burst { font-size: 54px; animation: bounce .8s infinite; }
 .unlock-list { margin: 12px 0; }

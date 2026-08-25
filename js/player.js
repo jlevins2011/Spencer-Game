@@ -82,8 +82,8 @@ var Player = (function () {
     // invisible walls at the edge of the island
     pos.x = Math.max(1, Math.min(World.SX - 1, pos.x));
     pos.z = Math.max(1, Math.min(World.SZ - 1, pos.z));
-    // safety net: if he somehow falls through, pop back to spawn
-    if (pos.y < -12) spawnAt(World.SX / 2, World.SZ / 2);
+    // safety net: below even the Deep Dark? pop back to spawn
+    if (pos.y < World.MIN_Y - 10) spawnAt(World.SX / 2, World.SZ / 2);
 
     // footsteps
     var moving = (Math.abs(vx) + Math.abs(vz)) > 0.5;

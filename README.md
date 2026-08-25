@@ -33,6 +33,12 @@ SPACE to jump, B to toggle build mode.
 - **🧰 Treasure chests** — build the word from letter tiles to pop the lock
 - **⛏️ Crafting pickaxe upgrades** — spell to craft
 - **👧👦 Sibling quests** — each kid's siblings appear in-game with little quests
+- **🔥 Daddy's SUPER CHALLENGES** — Daddy is in the game too (red hair, glasses,
+  and the hurt-leg boot). His challenges use harder words than the kid's
+  current level. 3 perfect-ish wins earn the **Voidbreaker Drill** (breaks
+  bedrock, opening the **Deep Dark** — 20 layers of deepslate, extra diamonds,
+  gem-paying amethyst, and ultra-rare mythril at the bottom). 8 wins earn the
+  **Thunder Pick** (mines twice as fast). After that he pays out gems.
 
 Words quietly ramp up in difficulty as each kid plays, and missed words come
 back around more often until they're nailed. Leveling up unlocks new worlds:

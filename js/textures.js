@@ -48,7 +48,8 @@ var Textures = (function () {
     CHEST_FRONT: 16, CHEST_SIDE: 17, CHEST_TOP: 18, BEDROCK: 19, CACTUS_SIDE: 20, CACTUS_TOP: 21,
     MUSH_STEM: 22, MUSH_CAP: 23, CRYSTAL: 24, GLOW: 25, ICE: 26,
     FLOWER_RED: 27, FLOWER_YELLOW: 28, MUSH_SMALL: 29, SANDSTONE: 30, CRYSTAL_GRASS: 31,
-    LEAVES_PINK: 32, BRICK: 33
+    LEAVES_PINK: 32, BRICK: 33,
+    DEEPSLATE: 34, AMETHYST: 35, MYTHRIL: 36, VOIDROCK: 37
   };
 
   function paintAll() {
@@ -118,6 +119,14 @@ var Textures = (function () {
     for (var bx = 0; bx < TILE; bx++) px(1, 4, bx, 5, "#7d3428"), px(1, 4, bx, 11, "#7d3428");
     for (var by = 0; by < 5; by++) px(1, 4, 8, by, "#7d3428");
     for (var by2 = 6; by2 < 11; by2++) px(1, 4, 3, by2, "#7d3428"), px(1, 4, 12, by2, "#7d3428");
+
+    fill(2, 4, "#4a4a52", ["#3e3e46", "#56565e", "#44444c"]);                       // deepslate
+    fill(3, 4, "#4a4a52", ["#3e3e46", "#56565e"]);                                  // amethyst ore
+    spots(3, 4, "#b06fe8", 5, 2, "#d9b0ff");
+    fill(4, 4, "#4a4a52", ["#3e3e46", "#56565e"]);                                  // mythril ore
+    spots(4, 4, "#3fe8c4", 4, 2, "#a8ffe8");
+    fill(5, 4, "#17131f", ["#1f1830", "#0f0c16", "#241c38"]);                       // voidrock
+    spots(5, 4, "#4a3a7a", 3, 1);
   }
 
   // map tile constant -> [tx, ty]

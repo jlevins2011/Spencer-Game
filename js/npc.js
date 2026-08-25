@@ -8,7 +8,7 @@ var NPCs = (function () {
   var npcs = [];       // { def, group, hitbox, home:{x,z}, target:{x,z}, ... }
   var scene = null;
 
-  function makeFaceTexture(hair) {
+  function makeFaceTexture(hair, glasses) {
     var c = document.createElement("canvas");
     c.width = c.height = 16;
     var g = c.getContext("2d");
@@ -17,6 +17,14 @@ var NPCs = (function () {
     g.fillRect(0, 4, 2, 4); g.fillRect(14, 4, 2, 4);
     g.fillStyle = "#ffffff"; g.fillRect(3, 7, 4, 3); g.fillRect(9, 7, 4, 3);
     g.fillStyle = "#3a66c9"; g.fillRect(4, 8, 2, 2); g.fillRect(10, 8, 2, 2);
+    if (glasses) {
+      g.fillStyle = "#1a1a1a";
+      g.strokeStyle = "#1a1a1a";
+      g.strokeRect(2.5, 6.5, 5, 4);                             // left rim
+      g.strokeRect(8.5, 6.5, 5, 4);                             // right rim
+      g.fillRect(7, 7, 2, 1);                                   // bridge
+      g.fillRect(0, 7, 3, 1); g.fillRect(13, 7, 3, 1);          // arms
+    }
     g.fillStyle = "#d98a7a"; g.fillRect(6, 12, 4, 2);           // smile
     var t = new THREE.CanvasTexture(c);
     t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter;
@@ -46,7 +54,8 @@ var NPCs = (function () {
     var shirt = new THREE.MeshLambertMaterial({ color: def.shirt });
     var pants = new THREE.MeshLambertMaterial({ color: 0x3a4a6b });
     var hair = new THREE.MeshLambertMaterial({ color: def.hair });
-    var face = new THREE.MeshLambertMaterial({ map: makeFaceTexture(def.hair) });
+    var boot = new THREE.MeshLambertMaterial({ color: 0x33363d });
+    var face = new THREE.MeshLambertMaterial({ map: makeFaceTexture(def.hair, def.daddy) });
 
     function box(w, h, d, mats, x, y, z) {
       var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats);
@@ -54,6 +63,31 @@ var NPCs = (function () {
       group.add(m);
       return m;
     }
+
+    if (def.daddy) {
+      // Daddy: 6'2" of blocky glory — plus the famous hurt-leg boot
+      box(0.24, 0.75, 0.24, pants, -0.16, 0.375, 0);            // left leg
+      box(0.24, 0.42, 0.24, pants,  0.16, 0.54, 0);             // right leg (upper)
+      box(0.34, 0.34, 0.46, boot,   0.16, 0.17, 0.06);          // THE BOOT (chunky, sticks out)
+      box(0.30, 0.16, 0.30, boot,   0.16, 0.41, 0);             // boot cuff up the shin
+      box(0.56, 0.72, 0.3, shirt, 0, 1.11, 0);                  // body
+      box(0.17, 0.65, 0.17, skin, -0.38, 1.1, 0);               // arms
+      box(0.17, 0.65, 0.17, skin,  0.38, 1.1, 0);
+      var headMatsD = [hair, hair, hair, hair, face, hair];
+      box(0.48, 0.48, 0.48, headMatsD, 0, 1.75, 0);             // head
+      box(0.52, 0.12, 0.52, hair, 0, 2.02, 0);                  // red hair on top
+      var labelD = makeNameSprite(def.name);
+      labelD.position.set(0, 2.45, 0);
+      group.add(labelD);
+      var hitD = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 2.5, 1.1),
+        new THREE.MeshBasicMaterial({ visible: false })
+      );
+      hitD.position.set(0, 1.2, 0);
+      group.add(hitD);
+      return { group: group, hitbox: hitD };
+    }
+
     // legs, body, arms
     box(0.22, 0.55, 0.22, pants, -0.14, 0.275, 0);
     box(0.22, 0.55, 0.22, pants,  0.14, 0.275, 0);
@@ -88,13 +122,15 @@ var NPCs = (function () {
   function placeAll(spawnX, spawnZ) {
     npcs.forEach(function (n) { scene.remove(n.group); });
     npcs = [];
-    CONFIG.ACTIVE.helpers.forEach(function (def, i) {
+    var cast = CONFIG.ACTIVE.helpers.concat([CONFIG.DADDY]);
+    cast.forEach(function (def, i) {
       var model = buildModel(def);
-      var hx = spawnX + (i === 0 ? 4 : -4);
-      var hz = spawnZ + (i === 0 ? 3 : 4);
+      var hx = spawnX + [4, -4, 0][i];
+      var hz = spawnZ + [3, 4, -5][i];
       var n = {
         def: def, group: model.group, hitbox: model.hitbox,
-        home: { x: hx, z: hz }, target: null, moveT: 0, faceYaw: 0
+        home: { x: hx, z: hz }, target: null, moveT: 0, faceYaw: 0,
+        speed: def.daddy ? 0.45 : 1.1        // Daddy limps (hurt leg!)
       };
       model.hitbox.userData.npc = n;
       positionOnGround(n, hx, hz);
@@ -131,7 +167,7 @@ var NPCs = (function () {
           var tx = n.target.x - g.position.x, tz = n.target.z - g.position.z;
           var dist = Math.hypot(tx, tz);
           if (dist > 0.3) {
-            var step = Math.min(dist, dt * 1.1);
+            var step = Math.min(dist, dt * (n.speed || 1.1));
             var nx = g.position.x + (tx / dist) * step;
             var nz = g.position.z + (tz / dist) * step;
             positionOnGround(n, nx, nz);

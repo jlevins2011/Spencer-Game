@@ -25,9 +25,10 @@ var Learning = (function () {
   }
 
   // kind: "pick" (hear & find), "spell" (build the word), "sentence"
-  function getChallenge(kind) {
+  // opts.boost: raise difficulty by N tiers (Daddy's super challenges)
+  function getChallenge(kind, opts) {
     var mod = activeModule();
-    return mod ? mod.getChallenge(kind) : null;
+    return mod ? mod.getChallenge(kind, opts) : null;
   }
 
   function reportResult(challenge, result) {
@@ -61,7 +62,8 @@ var Learning = (function () {
     return Math.min(state().tier, CURRICULUM.TIERS.length - 1);
   }
 
-  function pickTierIndex() {
+  function pickTierIndex(boost) {
+    if (boost) return Math.min(currentTier() + boost, CURRICULUM.TIERS.length - 1);
     var t = currentTier();
     if (t > 0 && Math.random() < CONFIG.REVIEW_CHANCE) return t - 1;
     return t;
@@ -102,12 +104,13 @@ var Learning = (function () {
     return a;
   }
 
-  function getChallenge(kind) {
-    var tierIdx = pickTierIndex();
+  function getChallenge(kind, opts) {
+    var boost = (opts && opts.boost) || 0;
+    var tierIdx = pickTierIndex(boost);
     var tier = CURRICULUM.TIERS[tierIdx];
 
     // a slice of word-ore moments become read-the-sentence instead
-    if (kind === "pick" && Math.random() < 0.25 && tier.sentences.length) {
+    if (kind === "pick" && !boost && Math.random() < 0.25 && tier.sentences.length) {
       kind = "sentence";
     }
 
@@ -144,7 +147,7 @@ var Learning = (function () {
     // default: "pick" — hear the word, find it
     var all = wordsOf(tierIdx);
     var target2 = chooseTarget(all);
-    var nChoices = tierIdx >= 2 ? 4 : 3;
+    var nChoices = (tierIdx >= 2 || boost) ? 4 : 3;
     var decoyWords = sample(all, nChoices - 1, [target2]).map(function (w) { return w.word; });
     return {
       moduleId: "reading", kind: "pick", tier: tierIdx,

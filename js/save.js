@@ -15,8 +15,10 @@ var Save = (function () {
         xp: 0, level: startLevel, gems: 0,
         pickTier: 0,                 // 0 wood, 1 stone, 2 iron, 3 diamond
         world: "meadow",
-        inventory: {}                // blockName -> count
+        inventory: {},               // blockName -> count
+        tools: {}                    // special tools from Daddy: drill, thunder
       },
+      daddy: { wins: 0 },            // super-challenge wins
       reading: { tier: 0, tierWins: 0 },
       spelling: { tier: 0, tierWins: 0 },
       worlds: {},                    // worldId -> { edits: {"x,y,z": blockId} }
@@ -48,6 +50,7 @@ var Save = (function () {
           data = Object.assign(freshData(), parsed);
           data.player = Object.assign(freshData().player, parsed.player);
           data.stats = Object.assign(freshData().stats, parsed.stats);
+          if (!data.player.tools) data.player.tools = {};
         }
       }
     } catch (e) { /* corrupted save -> start fresh */ }
