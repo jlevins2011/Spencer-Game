@@ -12,7 +12,7 @@ var B = {
   BEDROCK: 15, CACTUS: 16, MUSH_STEM: 17, MUSH_CAP: 18, CRYSTAL: 19, GLOW: 20,
   ICE: 21, FLOWER_RED: 22, FLOWER_YELLOW: 23, MUSH_SMALL: 24, SANDSTONE: 25,
   CRYSTAL_GRASS: 26, LEAVES_PINK: 27, BRICK: 28,
-  DEEPSLATE: 29, AMETHYST: 30, MYTHRIL: 31, VOIDROCK: 32
+  DEEPSLATE: 29, AMETHYST: 30, MYTHRIL: 31, VOIDROCK: 32, WOOL: 33
 };
 
 var BLOCKS = (function () {
@@ -49,6 +49,7 @@ var BLOCKS = (function () {
   def(B.AMETHYST, "amethyst ore", { tiles: { top: T.AMETHYST, bottom: T.AMETHYST, side: T.AMETHYST }, drop: "amethyst", hard: 1000, needPick: 2, icon: "🟣" });
   def(B.MYTHRIL,  "mythril ore",  { tiles: { top: T.MYTHRIL, bottom: T.MYTHRIL, side: T.MYTHRIL }, drop: "mythril", hard: 1400, needPick: 2, icon: "🌀" });
   def(B.VOIDROCK, "voidrock", { tiles: { top: T.VOIDROCK, bottom: T.VOIDROCK, side: T.VOIDROCK }, hard: -1 });
+  def(B.WOOL,     "wool",     { tiles: { top: T.WOOL, bottom: T.WOOL, side: T.WOOL }, drop: "wool", hard: 250, icon: "🧶" });
   def(B.CACTUS,   "cactus",   { tiles: { top: T.CACTUS_TOP, bottom: T.CACTUS_TOP, side: T.CACTUS_SIDE }, drop: "cactus", hard: 250, icon: "🌵" });
   def(B.MUSH_STEM,"mushroom stem", { tiles: { top: T.MUSH_STEM, bottom: T.MUSH_STEM, side: T.MUSH_STEM }, drop: "mushroom", hard: 300, icon: "🍄" });
   def(B.MUSH_CAP, "mushroom cap",  { tiles: { top: T.MUSH_CAP, bottom: T.MUSH_STEM, side: T.MUSH_CAP }, drop: "mushroom", hard: 300, icon: "🍄" });
@@ -72,14 +73,16 @@ var ITEM_TO_BLOCK = {
   cactus: B.CACTUS, mushroom: B.MUSH_CAP, crystal: B.CRYSTAL, glowstone: B.GLOW,
   ice: B.ICE, flower: B.FLOWER_RED, sandstone: B.SANDSTONE,
   "pink leaves": B.LEAVES_PINK, brick: B.BRICK,
-  deepslate: B.DEEPSLATE, amethyst: B.AMETHYST, mythril: B.MYTHRIL
+  deepslate: B.DEEPSLATE, amethyst: B.AMETHYST, mythril: B.MYTHRIL,
+  wool: B.WOOL
 };
 var ITEM_ICON = {
   dirt: "🟫", stone: "🪨", sand: "🟨", wood: "🪵", leaves: "🍃", planks: "🟧",
   coal: "⚫", iron: "⛓️", diamond: "💎", cactus: "🌵", mushroom: "🍄",
   crystal: "🔮", glowstone: "✨", ice: "🧊", flower: "🌸", sandstone: "🧱",
   "pink leaves": "🌸", brick: "🧱",
-  deepslate: "⬛", amethyst: "🟣", mythril: "🌀"
+  deepslate: "⬛", amethyst: "🟣", mythril: "🌀",
+  wool: "🧶", meat: "🍖"
 };
 
 /* ---------------- world definitions ---------------- */

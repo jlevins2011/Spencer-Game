@@ -51,6 +51,7 @@ var Game = (function () {
 
     World.init(scene);
     NPCs.init(scene);
+    Animals.init(scene);
     Player.init(camera);
     Controls.init(renderer.domElement);
 
@@ -73,6 +74,7 @@ var Game = (function () {
     var sx = Math.floor(World.SX / 2), sz = Math.floor(World.SZ / 2);
     Player.spawnAt(sx, sz);
     NPCs.placeAll(sx, sz);
+    Animals.populate();
     UI.toast(def.emoji + " Welcome to " + def.name + "!");
     GameAudio.say("Welcome to " + def.name + "!");
   }
@@ -81,6 +83,7 @@ var Game = (function () {
     UI.hideHome();
     running = true;
     Game.running = true;
+    lastEdu = Date.now();
     travelTo(Save.data.player.world || "meadow");
     Controls.setEnabled(true);
     UI.updateHud();
@@ -135,6 +138,13 @@ var Game = (function () {
     var npcHits = npcRaycaster.intersectObjects(NPCs.hitboxes(), false);
     if (npcHits.length && (!hit || npcHits[0].distance < hit.distance + 0.4)) {
       UI.showDialogue(npcHits[0].object.userData.npc);
+      return;
+    }
+
+    // then animals (hunting!)
+    var animalHits = npcRaycaster.intersectObjects(Animals.hitboxes(), false);
+    if (animalHits.length && (!hit || animalHits[0].distance < hit.distance + 0.4)) {
+      Animals.hit(animalHits[0].object.userData.animal, Player.position);
       return;
     }
 
@@ -242,6 +252,28 @@ var Game = (function () {
     UI.updateHotbar();
   }
 
+  /* ---------------- word storms ---------------- */
+  // If nothing educational happens for EDU_NUDGE_MINUTES, a storm
+  // rolls in: a modal challenge that must be answered to continue.
+  var lastEdu = Date.now();
+  function notifyEdu() { lastEdu = Date.now(); }
+
+  function maybeWordStorm() {
+    if (!running) return;
+    if (document.getElementById("overlay").classList.contains("open")) return;
+    if (Date.now() - lastEdu < CONFIG.EDU_NUDGE_MINUTES * 60 * 1000) return;
+    lastEdu = Date.now();   // set immediately so it can't double-fire
+    GameAudio.sfx.storm();
+    GameAudio.say("Uh oh! A word storm! Answer to clear the sky!");
+    UI.showChallenge("pick", function (result) {
+      if (result.correct) {
+        grantGems(2);
+        grantXP(10);
+        UI.toast("🌈 You cleared the word storm! +2 gems!", 3000);
+      }
+    }, "⚡ WORD STORM! ⚡");
+  }
+
   /* ---------------- Maggie's heists ---------------- */
   var lastSteal = 0;
   var STEAL_COOLDOWN = 120000;                 // at most one heist per 2 min
@@ -320,7 +352,9 @@ var Game = (function () {
 
     Player.update(dt);
     NPCs.update(dt, Player.position);
+    Animals.update(dt, Player.position);
     updateDayNight();
+    maybeWordStorm();
 
     clouds.forEach(function (c) {
       c.position.x += dt * 0.6;
@@ -359,6 +393,7 @@ var Game = (function () {
     init: init, start: start, interact: interact, travelTo: travelTo,
     grantXP: grantXP, grantGems: grantGems, grantItem: grantItem,
     toggleMode: toggleMode, setMode: setMode, maggieSteal: maggieSteal,
+    notifyEdu: notifyEdu,
     get mode() { return mode; }, set mode(v) { mode = v; },
     get selectedItem() { return selectedItem; }, set selectedItem(v) { selectedItem = v; },
     running: false

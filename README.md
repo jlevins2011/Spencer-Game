@@ -42,6 +42,15 @@ SPACE to jump, B to toggle build mode.
 - **🐶 Maggie the beagle** wanders every world and loves being petted (tap
   her!). But bomb a challenge badly and she'll dart in and steal something
   small — dirt, a flower — never anything valuable. Sneaky beagle.
+- **🐷 Animals!** Pigs, cows, chickens, and sheep roam every world. Tap to
+  hunt them (they squeal and run!) — a few bops earn meat 🍖 or wool 🧶 for
+  building and for new sister quests. They repopulate over time.
+- **🎒 Inventory** — tap the bag button (or press E) to see everything:
+  blocks, resources, gems, pickaxe, and legendary tools. Tap a block there
+  to start building with it.
+- **⚡ WORD STORMS** — go 5 minutes without doing anything educational and a
+  storm rolls in: a word challenge takes over the screen and must be answered
+  (with a gem reward) before play continues. No coasting!
 
 Difficulty self-adjusts BOTH ways: consistent success unlocks harder words,
 and a rough patch automatically drops back to words the kid can win with

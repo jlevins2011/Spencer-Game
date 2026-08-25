@@ -122,6 +122,8 @@ var CURRICULUM = (function () {
     { tier: 2, text: "I would like 5 wood for my house.", ask: "wood",    count: 5, icon: "🪵", decoys: ["🧱","🍃"] },
     { tier: 2, text: "Please mine 2 coal so we can cook.",ask: "coal",    count: 2, icon: "⚫", decoys: ["💎","🪵"] },
     { tier: 2, text: "Find 5 stone deep under the grass.",ask: "stone",   count: 5, icon: "🪨", decoys: ["🟫","⚫"] },
+    { tier: 1, text: "I am so hungry! Please get 2 meat.",  ask: "meat",   count: 2, icon: "🍖", decoys: ["🧶","🌸"] },
+    { tier: 2, text: "I need 3 wool to make a soft blanket.", ask: "wool", count: 3, icon: "🧶", decoys: ["🍖","🍃"] },
     { tier: 3, text: "Could you mine 1 shiny diamond for me?", ask: "diamond", count: 1, icon: "💎", decoys: ["⚫","🪨"] },
     { tier: 3, text: "I am building a tower. I need 6 stone!", ask: "stone",  count: 6, icon: "🪨", decoys: ["🪵","🟨"] },
     { tier: 3, text: "Gather 3 iron so I can make a bell.",    ask: "iron",   count: 3, icon: "⛓️", decoys: ["💎","⚫"] }

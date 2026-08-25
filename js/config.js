@@ -64,5 +64,9 @@ var CONFIG = {
   REVIEW_CHANCE: 0.2,    // fraction of challenges that review easier material
   // struggle points before difficulty backs off a tier
   // (a rough challenge = 1 point, a really rough one = 2; a perfect win clears them)
-  BACK_OFF_AT: 5
+  BACK_OFF_AT: 5,
+
+  // If a kid goes this long without doing anything educational,
+  // a WORD STORM rolls in and must be answered to keep playing.
+  EDU_NUDGE_MINUTES: 5
 };
