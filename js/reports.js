@@ -1,9 +1,58 @@
 "use strict";
 /* ============================================================
    PARENT REPORTS — the hidden grown-ups dashboard and the
-   weekly email report (via a Formspree endpoint in CONFIG).
+   weekly email reports. Sends to every linked parent email
+   (free, via formsubmit.co). Emails are managed on-device in
+   the dashboard; CONFIG can hold defaults too.
    ============================================================ */
 var Reports = (function () {
+  var EMAILS_KEY = "craftworlds_report_emails";
+
+  /* ---------- linked emails (stored on this device) ---------- */
+  function deviceEmails() {
+    try {
+      var raw = localStorage.getItem(EMAILS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  }
+
+  function getEmails() {
+    var list = deviceEmails();
+    if (list === null) list = (CONFIG.REPORT_EMAILS || []).slice();
+    return list;
+  }
+
+  function saveEmails(list) {
+    try { localStorage.setItem(EMAILS_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  function addEmail(email) {
+    email = (email || "").trim();
+    if (!email || email.indexOf("@") < 1 || /\s/.test(email)) return false;
+    var list = getEmails();
+    if (list.indexOf(email) >= 0) return true;
+    list.push(email);
+    saveEmails(list);
+    return true;
+  }
+
+  function removeEmail(email) {
+    saveEmails(getEmails().filter(function (e) { return e !== email; }));
+  }
+
+  // every place a report should be POSTed
+  function targets() {
+    var t = getEmails().map(function (e) {
+      return { label: e, url: "https://formsubmit.co/ajax/" + e };
+    });
+    (CONFIG.REPORT_ENDPOINTS || []).forEach(function (u) {
+      t.push({ label: u.replace(/^https?:\/\//, "").slice(0, 30) + "…", url: u });
+    });
+    return t;
+  }
+
+  function enabled() { return targets().length > 0; }
 
   function fmtMinutes(ms) {
     var m = Math.round(ms / 60000);
@@ -84,27 +133,47 @@ var Reports = (function () {
     return lines.join("\n");
   }
 
+  // send the active kid's report to every linked email.
+  // callback(anyOk, results[]) where results = [{label, ok}]
   function send(callback) {
-    if (!CONFIG.REPORT_ENDPOINT) { if (callback) callback(false); return; }
-    fetch(CONFIG.REPORT_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        subject: "CraftWorlds weekly report — " + CONFIG.PLAYER_NAME,
-        message: buildTextReport()
-      })
-    }).then(function (r) {
-      if (r.ok) {
+    var list = targets();
+    if (!list.length) { if (callback) callback(false, []); return; }
+    var subject = "CraftWorlds weekly report — " + CONFIG.PLAYER_NAME;
+    var report = buildTextReport();
+    var results = [], pending = list.length;
+
+    function finish() {
+      var anyOk = results.some(function (r) { return r.ok; });
+      if (anyOk) {
         Save.data.stats.lastReportAt = Date.now();
         Stats.rollWeek();
       }
-      if (callback) callback(r.ok);
-    }).catch(function () { if (callback) callback(false); });
+      if (callback) callback(anyOk, results);
+    }
+
+    list.forEach(function (t) {
+      fetch(t.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          _subject: subject,          // formsubmit.co subject line
+          subject: subject,           // formspree-style fallback
+          name: "CraftWorlds Reports",
+          message: report
+        })
+      }).then(function (r) { return r.ok; })
+        .catch(function () { return false; })
+        .then(function (ok) {
+          results.push({ label: t.label, ok: ok });
+          pending -= 1;
+          if (pending === 0) finish();
+        });
+    });
   }
 
   // called on startup: auto-send when a week has passed
   function maybeAutoSend() {
-    if (!CONFIG.REPORT_ENDPOINT) return;
+    if (!enabled()) return;
     var last = Save.data.stats.lastReportAt || Save.data.stats.weekStart;
     if (Date.now() - last > CONFIG.REPORT_EVERY_DAYS * 24 * 3600 * 1000) {
       send(function (ok) {
@@ -153,14 +222,30 @@ var Reports = (function () {
       s.lifetime.blocksMined + " mined · " + s.lifetime.blocksPlaced + " built · " +
       s.lifetime.quests + " quests</div>" +
 
-      "<div class='pr-section'><b>Weekly email:</b> " +
-      (CONFIG.REPORT_ENDPOINT
-        ? "ON — sends every " + CONFIG.REPORT_EVERY_DAYS + " days.<br><button class='big-btn small-btn' id='pr-send'>📧 SEND REPORT NOW</button>"
-        : "OFF — see README for the 2-minute Formspree setup.") + "</div>" +
+      "<div class='pr-section'><b>📧 Weekly email reports</b> (every " + CONFIG.REPORT_EVERY_DAYS + " days, per kid)<br>" +
+      (getEmails().length
+        ? "<div class='pr-emails'>" + getEmails().map(function (e) {
+            return "<div class='pr-email-row'><span>" + e + "</span>" +
+              "<button class='pr-email-del' data-email='" + e + "'>✕</button></div>";
+          }).join("") + "</div>"
+        : "<i>No emails linked yet — add one below.</i>") +
+      "<div class='pr-email-add'>" +
+      "<input type='email' id='pr-email-input' class='pr-input' placeholder='parent@email.com'>" +
+      "<button class='big-btn small-btn' id='pr-email-addbtn'>ADD</button></div>" +
+      (getEmails().length
+        ? "<button class='big-btn small-btn' id='pr-send'>📧 SEND " + CONFIG.PLAYER_NAME.toUpperCase() + "'S REPORT NOW</button>" +
+          "<div id='pr-send-status'></div>" +
+          "<i>First time? Each address gets a one-time \"activate\" email from formsubmit.co — click the link in it once, then reports flow automatically.</i>"
+        : "") +
+      "</div>" +
       "</div>" +
       "<button class='big-btn' id='pr-close'>CLOSE</button>" +
       "<button class='ghost-btn danger' id='pr-reset'>🗑 Reset all progress</button>";
   }
 
-  return { buildTextReport: buildTextReport, send: send, maybeAutoSend: maybeAutoSend, dashboardHtml: dashboardHtml };
+  return {
+    buildTextReport: buildTextReport, send: send, maybeAutoSend: maybeAutoSend,
+    dashboardHtml: dashboardHtml, getEmails: getEmails, addEmail: addEmail,
+    removeEmail: removeEmail, enabled: enabled
+  };
 })();

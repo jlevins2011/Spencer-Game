@@ -492,11 +492,29 @@ var UI = (function () {
   function showParent() {
     openOverlay(Reports.dashboardHtml());
     $("pr-close").addEventListener("pointerdown", closeOverlay);
+
     var sendBtn = $("pr-send");
     if (sendBtn) sendBtn.addEventListener("pointerdown", function () {
       sendBtn.textContent = "SENDING…";
-      Reports.send(function (ok) {
-        sendBtn.textContent = ok ? "✅ SENT!" : "❌ FAILED — check endpoint";
+      Reports.send(function (anyOk, results) {
+        sendBtn.textContent = anyOk ? "✅ SENT!" : "❌ COULD NOT SEND";
+        var status = $("pr-send-status");
+        if (status) status.innerHTML = results.map(function (r) {
+          return (r.ok ? "✅ " : "❌ ") + r.label;
+        }).join("<br>");
+      });
+    });
+
+    var addBtn = $("pr-email-addbtn");
+    if (addBtn) addBtn.addEventListener("pointerdown", function () {
+      var input = $("pr-email-input");
+      if (Reports.addEmail(input.value)) showParent();   // re-render
+      else { input.style.borderColor = "#c0392b"; }
+    });
+    document.querySelectorAll(".pr-email-del").forEach(function (btn) {
+      btn.addEventListener("pointerdown", function () {
+        Reports.removeEmail(btn.getAttribute("data-email"));
+        showParent();   // re-render
       });
     });
     var resetBtn = $("pr-reset");
