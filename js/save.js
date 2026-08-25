@@ -22,6 +22,7 @@ var Save = (function () {
       mommy: { wins: 0 },
       reading: { tier: 0, tierWins: 0, struggle: 0 },
       spelling: { tier: 0, tierWins: 0, struggle: 0 },
+      latin: { tier: 0, tierWins: 0, struggle: 0 },
       worlds: {},                    // worldId -> { edits: {"x,y,z": blockId} }
       quests: { active: null, completed: 0 },
       stats: {
@@ -53,6 +54,7 @@ var Save = (function () {
           data.stats = Object.assign(freshData().stats, parsed.stats);
           data.daddy = Object.assign(freshData().daddy, parsed.daddy || {});
           data.mommy = Object.assign(freshData().mommy, parsed.mommy || {});
+          data.latin = Object.assign(freshData().latin, parsed.latin || {});
           if (!data.player.tools) data.player.tools = {};
         }
       }

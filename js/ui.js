@@ -295,6 +295,8 @@ var UI = (function () {
   /* ---------------- challenge: hear & find ---------------- */
   function showPick(ch, onDone, intro) {
     var mistakes = 0, done = false;
+    var spoken = ch.speak || ch.word;
+    var correct = ch.answer || ch.word;
     var html =
       "<div class='ch-title'>" + (intro || "🔮 Word Ore!") + "</div>" +
       "<div class='ch-sub'>" + (ch.subtitle || "Tap the word you hear!") + "</div>" +
@@ -309,7 +311,7 @@ var UI = (function () {
       b.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
         if (done) return;
-        if (word === ch.word) {
+        if (word === correct) {
           done = true;
           GameAudio.sfx.correct();
           b.classList.add("right");
@@ -323,23 +325,24 @@ var UI = (function () {
           GameAudio.sfx.wrong();
           b.classList.add("wrong");
           setTimeout(function () { b.classList.remove("wrong"); }, 500);
-          setTimeout(function () { GameAudio.say(ch.word); }, 450);
+          setTimeout(function () { GameAudio.say(spoken); }, 450);
         }
       });
       grid.appendChild(b);
     });
     $("ch-speak").addEventListener("pointerdown", function (e) {
-      e.stopPropagation(); GameAudio.say(ch.word);
+      e.stopPropagation(); GameAudio.say(spoken);
     });
-    setTimeout(function () { GameAudio.say(ch.word); }, 400);
+    setTimeout(function () { GameAudio.say(spoken); }, 400);
   }
 
   /* ---------------- challenge: build the word ---------------- */
   function showSpell(ch, onDone, introText) {
     var mistakes = 0, next = 0, missesHere = 0, done = false;
+    var spoken = ch.speak || ch.word;
     var html =
       "<div class='ch-title'>" + (introText || "🧰 Locked Chest!") + "</div>" +
-      "<div class='ch-sub'>Build the word" + (ch.emoji ? " for " + ch.emoji : "") + "</div>" +
+      "<div class='ch-sub'>" + (ch.subtitle || ("Build the word" + (ch.emoji ? " for " + ch.emoji : ""))) + "</div>" +
       "<button class='speak-btn' id='ch-speak'>🔊</button>" +
       "<div class='spell-slots' id='ch-slots'></div>" +
       "<div class='tile-grid' id='ch-tiles'></div>";
@@ -371,7 +374,7 @@ var UI = (function () {
           if (next >= ch.word.length) {
             done = true;
             GameAudio.sfx.correct();
-            setTimeout(function () { GameAudio.say(ch.word + "! Great job!"); }, 250);
+            setTimeout(function () { GameAudio.say(spoken + "! Great job!"); }, 250);
             celebrate($("overlay-card"));
             setTimeout(function () {
               closeOverlay();
@@ -394,9 +397,9 @@ var UI = (function () {
     });
 
     $("ch-speak").addEventListener("pointerdown", function (e) {
-      e.stopPropagation(); GameAudio.say(ch.word);
+      e.stopPropagation(); GameAudio.say(spoken);
     });
-    setTimeout(function () { GameAudio.say(ch.word); }, 400);
+    setTimeout(function () { GameAudio.say(spoken); }, 400);
   }
 
   /* ---------------- challenge: read the sentence ---------------- */
@@ -406,13 +409,13 @@ var UI = (function () {
       "<div class='ch-title'>" + (introText || "📜 Secret Message!") + "</div>" +
       "<div class='sentence-text'>" + ch.text + "</div>" +
       "<button class='speak-btn small' id='ch-speak'>🔊 Help me read it</button>" +
-      "<div class='ch-sub'>Tap the picture that matches!</div>" +
+      "<div class='ch-sub'>" + (ch.subtitle || "Tap the picture that matches!") + "</div>" +
       "<div class='word-grid' id='ch-grid'></div>";
     openOverlay(html);
     var grid = $("ch-grid");
     ch.choices.forEach(function (emoji) {
       var b = document.createElement("button");
-      b.className = "word-block emoji-block";
+      b.className = "word-block" + (emoji.length <= 4 ? " emoji-block" : "");
       b.textContent = emoji;
       b.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
@@ -436,7 +439,7 @@ var UI = (function () {
       grid.appendChild(b);
     });
     $("ch-speak").addEventListener("pointerdown", function (e) {
-      e.stopPropagation(); GameAudio.say(ch.text, 0.8);
+      e.stopPropagation(); GameAudio.say(ch.speak || ch.text, 0.8);
     });
   }
 

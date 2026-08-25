@@ -6,6 +6,7 @@ and quietly get better at words while they do it.
 Two player profiles on the same page, each with its own save, difficulty, and weekly report:
 - **Spencer (7)** — reading: sight words, phonics, and sentences
 - **Penelope (10)** — spelling: standard 4th-5th grade lists, from "because" to "mischievous"
+- **Olivia (13)** — Latin: **Kraken Latin 1** (Natali H. Monnette / Canon Press), the 32-lesson logic-years syllabus
 
 Built for iPad (touch controls), works in any modern browser. No installs, no accounts.
 
@@ -29,7 +30,8 @@ SPACE to jump, B to toggle build mode.
 
 ### Where the learning hides
 - **❓ Word ore** (purple sparkly blocks) — Spencer: hear a word, tap the right one.
-  Penelope: tap the correctly-spelled version among realistic misspellings
+  Penelope: tap the correctly-spelled version among realistic misspellings.
+  Olivia: hear the English, tap the Latin (Kraken Latin 1 vocabulary)
 - **🧰 Treasure chests** — build the word from letter tiles to pop the lock
 - **⛏️ Crafting pickaxe upgrades** — spell to craft
 - **👧👦 Sibling quests** — each kid's siblings appear in-game with little quests
@@ -67,7 +69,7 @@ and a rough patch automatically drops back to words the kid can win with
 Words quietly ramp up in difficulty as each kid plays, and missed words come
 back around more often until they're nailed. Leveling up unlocks new worlds:
 Sunny Meadow → Golden Desert (Lv 3) → Snowy Peaks (Lv 5) → Mushroom Isle (Lv 7) → Crystal Caves (Lv 9).
-(Penelope starts at level 3.)
+(Penelope starts at level 3. Olivia starts at level 5.)
 
 ## Weekly parent reports (1-minute setup, no accounts)
 
@@ -98,6 +100,7 @@ Notes:
 - `js/config.js` — player profiles, helpers, difficulty pacing, report settings
 - `js/curriculum.js` — Spencer's reading words, sentences, and the quests
 - `js/spelling.js` — Penelope's spelling lists (swap in school lists here!)
+- `js/latin.js` — Olivia's Kraken Latin 1 vocabulary (units 1–4)
 - The learning engine (`js/learning.js`) is pluggable; a future math module
   just calls `Learning.registerModule({...})` and a profile points at it.
   The game itself never needs to change.
