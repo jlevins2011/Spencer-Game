@@ -254,7 +254,10 @@ var UI = (function () {
     var craft = availableCraft();
     if (!craft) return;
     var ch = Learning.getChallenge("spell");
-    showSpell(ch, function (result) {
+    var intro = "Spell the magic word to craft your " + craft.name + "!";
+    if (ch && ch.kind === "picture") intro = "Tap the word that matches to craft your " + craft.name + "!";
+    else if (ch && ch.kind !== "spell") intro = "Tap the word you hear to craft your " + craft.name + "!";
+    presentChallenge(ch, function (result) {
       Learning.reportResult(ch, result);
       if (result.correct) {
         var inv = Save.data.player.inventory;
@@ -266,7 +269,7 @@ var UI = (function () {
         toast("⛏️ You crafted a " + craft.name.toUpperCase() + "! You can mine faster now!", 3500);
         updateHotbar();
       }
-    }, "Spell the magic word to craft your " + craft.name + "!");
+    }, intro);
   }
 
   /* ---------------- generic overlay ---------------- */
@@ -292,17 +295,9 @@ var UI = (function () {
     }
   }
 
-  /* ---------------- challenge: hear & find ---------------- */
-  function showPick(ch, onDone, intro) {
+  function fillWordChoices(ch, onDone, getCorrect, onRight) {
     var mistakes = 0, done = false;
-    var spoken = ch.speak || ch.word;
-    var correct = ch.answer || ch.word;
-    var html =
-      "<div class='ch-title'>" + (intro || "🔮 Word Ore!") + "</div>" +
-      "<div class='ch-sub'>" + (ch.subtitle || "Tap the word you hear!") + "</div>" +
-      "<button class='speak-btn' id='ch-speak'>🔊</button>" +
-      "<div class='word-grid' id='ch-grid'></div>";
-    openOverlay(html);
+    var correct = getCorrect();
     var grid = $("ch-grid");
     ch.choices.forEach(function (word) {
       var b = document.createElement("button");
@@ -315,6 +310,7 @@ var UI = (function () {
           done = true;
           GameAudio.sfx.correct();
           b.classList.add("right");
+          if (onRight) onRight(correct);
           celebrate($("overlay-card"));
           setTimeout(function () {
             closeOverlay();
@@ -325,15 +321,49 @@ var UI = (function () {
           GameAudio.sfx.wrong();
           b.classList.add("wrong");
           setTimeout(function () { b.classList.remove("wrong"); }, 500);
-          setTimeout(function () { GameAudio.say(spoken); }, 450);
+          setTimeout(function () { GameAudio.say(ch.speak || ch.word); }, 450);
         }
       });
       grid.appendChild(b);
     });
+  }
+
+  /* ---------------- challenge: hear & find ---------------- */
+  function showPick(ch, onDone, intro) {
+    var spoken = ch.speak || ch.word;
+    var html =
+      "<div class='ch-title'>" + (intro || "🔮 Word Ore!") + "</div>" +
+      "<div class='ch-sub'>" + (ch.subtitle || "Tap the word you hear!") + "</div>" +
+      "<button class='speak-btn' id='ch-speak'>🔊</button>" +
+      "<div class='word-grid' id='ch-grid'></div>";
+    openOverlay(html);
+    fillWordChoices(ch, onDone, function () { return ch.answer || ch.word; });
     $("ch-speak").addEventListener("pointerdown", function (e) {
       e.stopPropagation(); GameAudio.say(spoken);
     });
     setTimeout(function () { GameAudio.say(spoken); }, 400);
+  }
+
+  /* ---------------- challenge: big picture → tap the word ---------------- */
+  function showPicture(ch, onDone, introText) {
+    var spoken = ch.speak || ch.word;
+    var html =
+      "<div class='ch-title'>" + (introText || "What word is this?") + "</div>" +
+      "<button type='button' class='picture-hero' id='ch-picture' aria-label='Hear the word'>" +
+        (ch.emoji || "❓") + "</button>" +
+      "<div class='ch-sub'>" + (ch.subtitle || "Tap the picture or 🔊 to hear it, then tap the word!") + "</div>" +
+      "<button class='speak-btn' id='ch-speak'>🔊</button>" +
+      "<div class='word-grid' id='ch-grid'></div>";
+    openOverlay(html);
+    function hear(e) {
+      if (e) e.stopPropagation();
+      GameAudio.say(spoken);
+    }
+    $("ch-picture").addEventListener("pointerdown", hear);
+    $("ch-speak").addEventListener("pointerdown", hear);
+    fillWordChoices(ch, onDone, function () { return ch.answer || ch.word; }, function (word) {
+      GameAudio.say(word);
+    });
   }
 
   /* ---------------- challenge: build the word ---------------- */
@@ -450,9 +480,15 @@ var UI = (function () {
       Learning.reportResult(ch, result);
       onDone(result);
     };
-    if (ch.kind === "spell") showSpell(ch, wrapped, intro);
-    else if (ch.kind === "sentence") showSentence(ch, wrapped, intro);
-    else showPick(ch, wrapped, intro);
+    presentChallenge(ch, wrapped, intro);
+  }
+
+  function presentChallenge(ch, onDone, intro) {
+    if (!ch) { onDone({ correct: true, mistakes: 0 }); return; }
+    if (ch.kind === "spell") showSpell(ch, onDone, intro);
+    else if (ch.kind === "sentence") showSentence(ch, onDone, intro);
+    else if (ch.kind === "picture") showPicture(ch, onDone, intro);
+    else showPick(ch, onDone, intro);
   }
 
   /* ---------------- Daddy: super challenges & legendary tools ---------------- */
@@ -512,8 +548,7 @@ var UI = (function () {
     $("dad-go").addEventListener("pointerdown", function () {
       var kind = Math.random() < 0.5 ? "spell" : "pick";
       var ch = Learning.getChallenge(kind, { boost: 1 });
-      var run = ch.kind === "spell" ? showSpell : showPick;
-      run(ch, function (result) {
+      presentChallenge(ch, function (result) {
         Learning.reportResult(ch, result);
         if (!result.correct) return;
         Game.grantGems(3);
@@ -579,8 +614,7 @@ var UI = (function () {
     $("mom-go").addEventListener("pointerdown", function () {
       var kind = Math.random() < 0.5 ? "spell" : "pick";
       var ch = Learning.getChallenge(kind, { boost: 1 });
-      var run = ch.kind === "spell" ? showSpell : showPick;
-      run(ch, function (result) {
+      presentChallenge(ch, function (result) {
         Learning.reportResult(ch, result);
         if (!result.correct) return;
         Game.grantGems(3);

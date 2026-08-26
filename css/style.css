@@ -218,7 +218,32 @@ html, body {
   line-height: 1.35;
 }
 .word-block:active { transform: translateY(3px); }
-.word-block.emoji-block { font-size: 40px; background: #6db3f2; border-color: #3a76b5; }
+.word-block.emoji-block {
+  font-size: clamp(56px, 16vw, 80px);
+  min-width: 108px; min-height: 108px; padding: 14px 16px;
+  background: #6db3f2; border-color: #3a76b5;
+}
+
+.picture-hero {
+  font-family: inherit;
+  font-size: clamp(120px, 32vw, 188px);
+  line-height: 1;
+  width: min(240px, 72vw); height: min(240px, 72vw);
+  margin: 6px auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; color: inherit;
+  border: 6px solid #c9b48a; border-radius: 20px;
+  box-shadow: 0 8px 0 #b89a6a;
+  cursor: pointer; padding: 0;
+}
+.picture-hero:active { transform: translateY(4px); box-shadow: 0 4px 0 #b89a6a; }
+@media (max-height: 640px) {
+  .picture-hero {
+    font-size: 100px;
+    width: 140px; height: 140px;
+    margin: 2px auto 8px;
+  }
+}
 .word-block.right { background: #5fae3f !important; border-color: #2e6f20 !important; animation: bounce .5s; }
 .word-block.wrong { background: #c0392b !important; border-color: #7d2016 !important; animation: shake .4s; }
 @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }

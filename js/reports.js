@@ -85,6 +85,7 @@ var Reports = (function () {
     sight: "Sight words (recognize on sight)",
     phonics: "Phonics (sounding out)",
     sentences: "Sentence reading",
+    picture: "Matching words to pictures",
     spot: "Spotting correct spellings",
     spelling: "Spelling words out",
     "latin-vocab": "Latin vocabulary (Kraken Latin 1)",

@@ -9,7 +9,7 @@ var CONFIG = {
   PLAYERS: [
     {
       id: "spencer", name: "Spencer", emoji: "⛏️",
-      module: "reading",                    // learns: reading (age 7)
+      module: "reading",                    // hear-and-tap + picture-to-word (no spelling)
       saveKey: "spencercraft_save_v2",      // original key: keeps his progress
       startLevel: 1,
       helpers: [

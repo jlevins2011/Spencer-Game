@@ -5,9 +5,10 @@
    Tier 1: primer/1st sight words + full CVC
    Tier 2: blends & digraphs + 2nd grade sight words
    Tier 3: long vowels, silent-e, vowel teams
-   Words marked spell:true are phonetically friendly enough to be
-   used in build-the-word (spelling) challenges. Words with an emoji
-   can be used in picture-matching.
+   Words with an emoji are used for picture-to-word matching (tap the
+   word that matches a big picture). Spencer never spells — letter-tile
+   spelling is Penelope's job (and Olivia's Latin). The spell:true flag
+   is leftover data and is not used by the reading module.
    ============================================================ */
 var CURRICULUM = (function () {
 
