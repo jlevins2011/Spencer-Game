@@ -51,7 +51,9 @@ var Textures = (function () {
     LEAVES_PINK: 32, BRICK: 33,
     DEEPSLATE: 34, AMETHYST: 35, MYTHRIL: 36, VOIDROCK: 37, WOOL: 38,
     GLASS: 39, TORCH: 40,
-    ASPHALT: 41, CONCRETE: 42, PAINT_YELLOW: 43, PAINT_WHITE: 44
+    ASPHALT: 41, CONCRETE: 42, PAINT_YELLOW: 43, PAINT_WHITE: 44,
+    DOOR: 45, LADDER: 46, FENCE: 47, BED: 48, WOOL_RED: 49,
+    CRAFT_TOP: 50, CRAFT_SIDE: 51
   };
 
   function paintAll() {
@@ -149,6 +151,37 @@ var Textures = (function () {
     for (var cx2 = 0; cx2 < TILE; cx2++) px(2, 5, cx2, 7, "#a8a49a");
     fill(3, 5, "#f0c830", ["#e8bc20", "#f8d448"]);                                  // yellow paint
     fill(4, 5, "#f4f4f0", ["#ffffff", "#e8e8e2"]);                                  // white paint
+
+    fill(5, 5, "#6b4a2a", ["#5e3f22", "#775434"]);                                  // door
+    g.fillStyle = "#3f76e4"; g.fillRect(5 * TILE + 9, 5 * TILE + 3, 5, 6);
+    g.fillStyle = "#e8c84a"; g.fillRect(5 * TILE + 3, 5 * TILE + 8, 2, 2);
+    g.strokeStyle = "#3d2a14"; g.strokeRect(5 * TILE + 0.5, 5 * TILE + 0.5, 15, 15);
+
+    clearTile(6, 5);                                                                // ladder (cross)
+    for (var ly = 0; ly < TILE; ly++) px(6, 5, 3, ly, "#6b4a2a"), px(6, 5, 12, ly, "#6b4a2a");
+    for (var lr = 2; lr < 16; lr += 4) {
+      for (var lx = 3; lx <= 12; lx++) px(6, 5, lx, lr, "#8a5a2b");
+    }
+
+    fill(7, 5, "#a07a4a", ["#96703f", "#ab8555"]);                                  // fence
+    for (var fy = 0; fy < TILE; fy++) px(7, 5, 3, fy, "#6b4a2a"), px(7, 5, 12, fy, "#6b4a2a");
+    for (var fr = 4; fr <= 10; fr += 6) for (var fx = 3; fx <= 12; fx++) px(7, 5, fx, fr, "#6b4a2a");
+
+    fill(0, 6, "#c0392b", ["#b03427", "#d04435"]);                                  // bed
+    for (var bex = 0; bex < TILE; bex++) for (var bey = 0; bey < 6; bey++) px(0, 6, bex, bey, "#f2eee4");
+    for (var bex2 = 2; bex2 < 14; bex2++) px(0, 6, bex2, 2, "#e8e2d4");
+
+    fill(1, 6, "#c0392b", ["#b03427", "#d04435"]);                                  // red wool
+    for (var wy2 = 0; wy2 < TILE; wy2 += 4) for (var wx2 = 0; wx2 < TILE; wx2 += 4) {
+      px(1, 6, wx2 + 1, wy2 + 1, "#a83228");
+    }
+
+    fill(2, 6, "#a07a4a", ["#96703f", "#ab8555"]);                                  // crafting table top
+    for (var ctx = 0; ctx < TILE; ctx++) px(2, 6, ctx, 7, "#6b4a2a"), px(2, 6, 7, ctx, "#6b4a2a");
+    g.strokeStyle = "#5e3f22"; g.strokeRect(2 * TILE + 0.5, 6 * TILE + 0.5, 15, 15);
+    fill(3, 6, "#7d5c33", ["#6b4a2a", "#8a6740"]);                                  // crafting table side
+    g.fillStyle = "#c8c0b0"; g.fillRect(3 * TILE + 4, 6 * TILE + 5, 8, 6);
+    g.fillStyle = "#5e3f22"; g.fillRect(3 * TILE + 6, 6 * TILE + 7, 4, 2);
   }
 
   // map tile constant -> [tx, ty]

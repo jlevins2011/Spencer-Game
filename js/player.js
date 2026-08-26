@@ -58,15 +58,21 @@ var Player = (function () {
   function update(dt) {
     dt = Math.min(dt, 0.05);
     var inWater = World.isWaterAt(pos.x, pos.y + 0.5, pos.z);
+    var onLadder = World.isLadderAt(pos.x, pos.y + 0.4, pos.z) ||
+                   World.isLadderAt(pos.x, pos.y + 1.1, pos.z);
 
     // horizontal movement relative to yaw
     var sin = Math.sin(yaw), cos = Math.cos(yaw);
-    var speed = inWater ? SPEED * 0.55 : SPEED;
+    var speed = (inWater || onLadder) ? SPEED * 0.55 : SPEED;
     var vx = (move.x * cos - move.z * sin) * speed;
     var vz = (-move.x * sin - move.z * cos) * speed;
 
-    // gravity / swim
-    if (inWater) {
+    // gravity / swim / climb
+    if (onLadder) {
+      if (wantJump) vel.y = 4.6;
+      else if (move.z !== 0 || move.x !== 0) vel.y = 3.1;
+      else vel.y = -1.4;
+    } else if (inWater) {
       vel.y -= GRAVITY * 0.25 * dt;
       vel.y = Math.max(vel.y, -2.5);
       if (wantJump) vel.y = 3.2;
@@ -84,7 +90,15 @@ var Player = (function () {
     pos.x = Math.max(1, Math.min(World.SX - 1, pos.x));
     pos.z = Math.max(1, Math.min(World.SZ - 1, pos.z));
     // safety net: below even the Deep Dark? pop back to spawn
-    if (pos.y < World.MIN_Y - 10) spawnAt(World.SX / 2, World.SZ / 2);
+    if (pos.y < World.MIN_Y - 10) {
+      var bed = Save.data.player.bed;
+      if (bed && bed.world === Save.data.player.world) {
+        spawnAt(bed.x, bed.z);
+        if (UI && UI.toast) UI.toast("😴 You woke up in your bed!");
+      } else {
+        spawnAt(World.SX / 2, World.SZ / 2);
+      }
+    }
 
     // footsteps
     var moving = (Math.abs(vx) + Math.abs(vz)) > 0.5;

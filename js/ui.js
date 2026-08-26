@@ -64,9 +64,11 @@ var UI = (function () {
   var selectedIndex = -1;
   function hotbarItems() {
     var inv = Save.data.player.inventory;
-    return Object.keys(inv).filter(function (k) {
-      return inv[k] > 0 && ITEM_TO_BLOCK[k] !== undefined;
-    }).slice(0, 8);
+    var hand = ["bucket", "water bucket"].filter(function (k) { return (inv[k] || 0) > 0; });
+    var placeable = Object.keys(inv).filter(function (k) {
+      return inv[k] > 0 && ITEM_TO_BLOCK[k] !== undefined && hand.indexOf(k) < 0;
+    });
+    return hand.concat(placeable).slice(0, 8);
   }
 
   function updateHotbar() {
@@ -130,6 +132,9 @@ var UI = (function () {
       (p.tools.drill ? "<span class='inv-tool legendary'>🌀 Voidbreaker Drill</span>" : "") +
       (p.tools.wings ? "<span class='inv-tool legendary'>✈️ Pilot Wings</span>" : "") +
       (p.tools.thunder ? "<span class='inv-tool legendary'>⚡ Thunder Pick</span>" : "") +
+      (p.tools.shovel ? "<span class='inv-tool'>🥄 Shovel</span>" : "") +
+      (p.tools.axe ? "<span class='inv-tool'>🪓 Axe</span>" : "") +
+      (p.tools.shears ? "<span class='inv-tool'>✂️ Shears</span>" : "") +
       (p.tools.furnace ? "<button class='inv-tool legendary inv-station'>🔥 Magic Furnace</button>" : "") +
       (p.tools.lantern ? "<button class='inv-tool legendary inv-station'>🕯️ Lantern Kit</button>" : "") +
       "</div>";
@@ -154,11 +159,21 @@ var UI = (function () {
       slot.addEventListener("pointerdown", function () {
         var item = slot.getAttribute("data-item");
         if (ITEM_TO_BLOCK[item] === undefined) {
+          if (item === "bucket" || item === "water bucket") {
+            closeOverlay();
+            Game.selectedItem = item;
+            var idxB = hotbarItems().indexOf(item);
+            if (idxB >= 0) selectHotbar(idxB);
+            toast(item === "bucket" ? "🪣 Tap a water block to fill it!" : "💧 Tap to pour a pool!");
+            return;
+          }
           GameAudio.sfx.pop();
           toast(item === "meat" ? "🍖 Yummy! Someone might want this for dinner..." :
             item === "cooked meat" ? "🍗 Cooked and ready — somebody's hungry!" :
             item === "iron ore" ? "⛓️ Raw iron ore — smelt it in Mommy's furnace!" :
-            item === "iron" ? "⛓️ Iron ingot — craft an iron pickaxe with this!" :
+            item === "iron" ? "⛓️ Iron ingot — craft shears, a bucket, or an iron pickaxe!" :
+            item === "sticks" ? "🥢 Sticks — craft ladders, fences, a shovel, or an axe!" :
+            item === "bucket" ? "🪣 Tap a water block to fill it!" :
             "You can't place " + item + " — but it might be useful!");
           return;
         }
@@ -185,20 +200,71 @@ var UI = (function () {
     { tier: 3, name: "diamond pickaxe", level: 6, needs: { diamond: 3, wood: 2 }, icon: "⛏️" }
   ];
 
+  var WORKSHOP = [
+    { id: "planks", kind: "build", name: "4 planks", icon: "🟧", needs: { wood: 1 }, gives: { planks: 4 } },
+    { id: "sticks", kind: "build", name: "4 sticks", icon: "🥢", needs: { planks: 2 }, gives: { sticks: 4 } },
+    { id: "door", kind: "build", name: "door", icon: "🚪", needs: { planks: 6 }, gives: { door: 1 } },
+    { id: "ladder", kind: "build", name: "3 ladders", icon: "🪜", needs: { sticks: 7 }, gives: { ladder: 3 } },
+    { id: "fence", kind: "build", name: "3 fences", icon: "🚧", needs: { planks: 2, sticks: 4 }, gives: { fence: 3 } },
+    { id: "bed", kind: "build", name: "bed", icon: "🛏️", needs: { wool: 3, planks: 3 }, gives: { bed: 1 } },
+    { id: "table", kind: "build", name: "crafting table", icon: "🪚", needs: { planks: 4 }, gives: { "crafting table": 1 } },
+    { id: "redwool", kind: "build", name: "red wool", icon: "🟥", needs: { wool: 1, flower: 1 }, gives: { "red wool": 1 } },
+    { id: "shovel", kind: "tool", tool: "shovel", name: "shovel", icon: "🥄",
+      needs: { stone: 3, sticks: 2 }, blurb: "Mines dirt, sand, and snow extra fast!" },
+    { id: "axe", kind: "tool", tool: "axe", name: "axe", icon: "🪓",
+      needs: { stone: 3, sticks: 2 }, blurb: "Chops wood and leaves extra fast!" },
+    { id: "shears", kind: "tool", tool: "shears", name: "shears", icon: "✂️",
+      needs: { iron: 2 }, blurb: "Tap sheep for wool — they keep hopping around!" },
+    { id: "bucket", kind: "tool", name: "bucket", icon: "🪣",
+      needs: { iron: 3 }, gives: { bucket: 1 }, blurb: "Scoop water, then pour a pool anywhere!" }
+  ];
+
+  function canAfford(needs) {
+    var inv = Save.data.player.inventory;
+    return Object.keys(needs).every(function (k) { return (inv[k] || 0) >= needs[k]; });
+  }
+
+  function takeNeeds(needs) {
+    var inv = Save.data.player.inventory;
+    Object.keys(needs).forEach(function (k) { inv[k] -= needs[k]; });
+  }
+
+  function giveItems(gives) {
+    var inv = Save.data.player.inventory;
+    Object.keys(gives).forEach(function (k) { inv[k] = (inv[k] || 0) + gives[k]; });
+  }
+
   function availableCraft() {
     var p = Save.data.player;
     var next = CRAFTS[p.pickTier];
     if (!next || p.level < next.level) return null;
-    var inv = p.inventory;
-    var ok = Object.keys(next.needs).every(function (k) { return (inv[k] || 0) >= next.needs[k]; });
-    return ok ? next : null;
+    return canAfford(next.needs) ? next : null;
   }
 
   function nextCraftInfo() { return CRAFTS[Save.data.player.pickTier] || null; }
 
+  function availableWorkshop() {
+    var p = Save.data.player;
+    return WORKSHOP.filter(function (r) {
+      if (r.tool && p.tools[r.tool]) return false;
+      return canAfford(r.needs);
+    });
+  }
+
+  function visibleWorkshop() {
+    var p = Save.data.player;
+    return WORKSHOP.filter(function (r) {
+      return !(r.tool && p.tools[r.tool]);
+    });
+  }
+
+  function costStr(needs) {
+    return Object.keys(needs).map(function (k) { return needs[k] + " " + k; }).join(" + ");
+  }
+
   function updateCraftButton() {
     var b = $("btn-craft");
-    b.style.display = availableCraft() ? "block" : "none";
+    b.style.display = (availableCraft() || availableWorkshop().length) ? "block" : "none";
     var s = $("btn-smelt");
     if (s) s.style.display = availableSmelts().length ? "block" : "none";
   }
@@ -251,26 +317,124 @@ var UI = (function () {
     });
   }
 
+  function craftIntro(ch, kindName) {
+    if (ch && ch.kind === "picture") return "Tap the word that matches to craft your " + kindName + "!";
+    if (ch && ch.kind !== "spell") return "Tap the word you hear to craft your " + kindName + "!";
+    return "Spell the magic word to craft your " + kindName + "!";
+  }
+
+  function startToolChallenge(kindName, onSuccess) {
+    var ch = Learning.getChallenge("spell");
+    presentChallenge(ch, function (result) {
+      Learning.reportResult(ch, result);
+      if (result.correct) onSuccess();
+    }, craftIntro(ch, kindName));
+  }
+
   function doCraft() {
     var craft = availableCraft();
     if (!craft) return;
-    var ch = Learning.getChallenge("spell");
-    var intro = "Spell the magic word to craft your " + craft.name + "!";
-    if (ch && ch.kind === "picture") intro = "Tap the word that matches to craft your " + craft.name + "!";
-    else if (ch && ch.kind !== "spell") intro = "Tap the word you hear to craft your " + craft.name + "!";
-    presentChallenge(ch, function (result) {
-      Learning.reportResult(ch, result);
-      if (result.correct) {
-        var inv = Save.data.player.inventory;
-        Object.keys(craft.needs).forEach(function (k) { inv[k] -= craft.needs[k]; });
-        Save.data.player.pickTier = craft.tier;
+    startToolChallenge(craft.name, function () {
+      takeNeeds(craft.needs);
+      Save.data.player.pickTier = craft.tier;
+      Save.save();
+      GameAudio.sfx.levelup();
+      GameAudio.say("You crafted a " + craft.name + "!");
+      toast("⛏️ You crafted a " + craft.name.toUpperCase() + "! You can mine faster now!", 3500);
+      updateHotbar();
+    });
+  }
+
+  function recipeCardHtml(icon, name, req, extraClass, dataAttrs) {
+    return "<button class='world-card smelt-card" + (extraClass || "") + "' " + (dataAttrs || "") + ">" +
+      "<span class='world-emoji'>" + icon + "</span>" +
+      "<span class='world-name'>Make " + name + "</span>" +
+      "<span class='world-req'>" + req + "</span></button>";
+  }
+
+  function showWorkshop() {
+    var recipes = visibleWorkshop();
+    var ready = recipes.filter(function (r) { return canAfford(r.needs); });
+    var locked = recipes.filter(function (r) { return !canAfford(r.needs); });
+    var pick = availableCraft();
+    var nextPick = CRAFTS[Save.data.player.pickTier] || null;
+    var pickReady = !!pick;
+    var pickLocked = nextPick && !pick && Save.data.player.level >= nextPick.level;
+
+    if (!ready.length && !pickReady && !locked.length && !pickLocked) {
+      closeOverlay();
+      toast("Need more stuff to craft.");
+      return;
+    }
+
+    var html = "<div class='ch-title'>🔨 Workshop</div>" +
+      "<div class='ch-sub'>Build doors, beds, and tools — like a real crafting table!</div>";
+
+    if (ready.length || pickReady) {
+      html += "<div class='world-list'>";
+      ready.forEach(function (r, i) {
+        var extra = r.tool ? " · word challenge" : (r.blurb ? " · " + r.blurb : "");
+        html += recipeCardHtml(r.icon, r.name, costStr(r.needs) + extra, "", "data-kind='ws' data-i='" + i + "'");
+      });
+      if (pickReady) {
+        html += recipeCardHtml(pick.icon, pick.name, costStr(pick.needs) + " · word challenge", "", "data-kind='pick'");
+      }
+      html += "</div>";
+    } else {
+      html += "<div class='ch-sub'>Gather a little more, then these recipes light up!</div>";
+    }
+
+    if (locked.length || pickLocked) {
+      html += "<div class='ch-sub'>Need more stuff for:</div><div class='world-list'>";
+      locked.forEach(function (r) {
+        html += recipeCardHtml(r.icon, r.name, "Need " + costStr(r.needs), " locked", "");
+      });
+      if (pickLocked) {
+        html += recipeCardHtml(nextPick.icon, nextPick.name, "Need " + costStr(nextPick.needs), " locked", "");
+      }
+      html += "</div>";
+    }
+
+    html += "<button class='ghost-btn' id='ws-back'>⬅️ BACK</button>";
+    openOverlay(html);
+    $("ws-back").addEventListener("pointerdown", closeOverlay);
+    document.querySelectorAll(".smelt-card[data-kind]").forEach(function (card) {
+      card.addEventListener("pointerdown", function () {
+        var kind = card.getAttribute("data-kind");
+        if (kind === "pick") {
+          closeOverlay();
+          doCraft();
+          return;
+        }
+        var r = ready[+card.getAttribute("data-i")];
+        if (r) doWorkshop(r);
+      });
+    });
+  }
+
+  function doWorkshop(r) {
+    if (!canAfford(r.needs)) return;
+    if (r.tool) {
+      closeOverlay();
+      startToolChallenge(r.name, function () {
+        takeNeeds(r.needs);
+        if (r.gives) giveItems(r.gives);
+        Save.data.player.tools[r.tool] = true;
         Save.save();
         GameAudio.sfx.levelup();
-        GameAudio.say("You crafted a " + craft.name + "!");
-        toast("⛏️ You crafted a " + craft.name.toUpperCase() + "! You can mine faster now!", 3500);
+        GameAudio.say("You crafted a " + r.name + "!");
+        toast(r.icon + " You crafted a " + r.name + "! " + (r.blurb || ""), 3200);
         updateHotbar();
-      }
-    }, intro);
+      });
+      return;
+    }
+    takeNeeds(r.needs);
+    if (r.gives) giveItems(r.gives);
+    Save.save();
+    GameAudio.sfx.smelt();
+    toast(r.icon + " Crafted " + r.name + "!", 2200);
+    updateHotbar();
+    showWorkshop();
   }
 
   /* ---------------- generic overlay ---------------- */
@@ -956,7 +1120,7 @@ var UI = (function () {
     $("btn-pause").addEventListener("pointerdown", function (e) { e.stopPropagation(); showPause(); });
     $("btn-bag").addEventListener("pointerdown", function (e) { e.stopPropagation(); showInventory(); });
     $("btn-mode").addEventListener("pointerdown", function (e) { e.stopPropagation(); Game.toggleMode(); });
-    $("btn-craft").addEventListener("pointerdown", function (e) { e.stopPropagation(); doCraft(); });
+    $("btn-craft").addEventListener("pointerdown", function (e) { e.stopPropagation(); showWorkshop(); });
     $("btn-smelt").addEventListener("pointerdown", function (e) { e.stopPropagation(); doSmelt(); });
     var jb = $("btn-jump");
     jb.addEventListener("pointerdown", function (e) { e.stopPropagation(); Player.jump = true; });
@@ -973,7 +1137,7 @@ var UI = (function () {
     showChallenge: showChallenge, showDialogue: showDialogue,
     showInventory: showInventory, toggleInventory: toggleInventory,
     showLevelUp: showLevelUp, showPause: showPause, showHome: showHome, hideHome: hideHome,
-    rankFor: rankFor, xpNeeded: xpNeeded, nextCraftInfo: nextCraftInfo,
+    rankFor: rankFor, xpNeeded: xpNeeded, nextCraftInfo: nextCraftInfo, showWorkshop: showWorkshop,
     closeOverlay: closeOverlay
   };
 })();

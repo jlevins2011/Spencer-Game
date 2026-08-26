@@ -29,6 +29,7 @@ var Animals = (function () {
 
   function buildAnimal(type) {
     var g = new THREE.Group();
+    var extra = {};
     if (type === "pig") {
       var pink = mat(0xefa2b0), snout = mat(0xd9808f);
       box(g, 0.4, 0.35, 0.62, pink, 0, 0.38, 0);
@@ -58,12 +59,16 @@ var Animals = (function () {
       box(g, 0.05, 0.14, 0.05, beak,  0.06, 0.09, 0);
     } else { // sheep
       var wool = mat(0xf2eee4), face = mat(0x8a8078);
-      box(g, 0.46, 0.4, 0.66, wool, 0, 0.48, 0);
+      var body = box(g, 0.46, 0.4, 0.66, wool, 0, 0.48, 0);
       box(g, 0.2, 0.2, 0.18, face, 0, 0.58, 0.4);
-      box(g, 0.24, 0.16, 0.12, wool, 0, 0.7, 0.36);      // wool cap
+      var cap = box(g, 0.24, 0.16, 0.12, wool, 0, 0.7, 0.36);      // wool cap
       [[-0.14, 0.2], [0.14, 0.2], [-0.14, -0.2], [0.14, -0.2]].forEach(function (p) {
         box(g, 0.1, 0.26, 0.1, face, p[0], 0.13, p[1]);
       });
+      var skinny = box(g, 0.32, 0.28, 0.5, face, 0, 0.42, 0);
+      skinny.visible = false;
+      extra.wool = [body, cap];
+      extra.shearedBody = skinny;
     }
     var hit = new THREE.Mesh(
       new THREE.BoxGeometry(0.9, 1.1, 1.1),
@@ -71,7 +76,7 @@ var Animals = (function () {
     );
     hit.position.set(0, 0.45, 0);
     g.add(hit);
-    return { group: g, hitbox: hit };
+    return { group: g, hitbox: hit, wool: extra.wool, shearedBody: extra.shearedBody };
   }
 
   function groundY(x, z) { return World.surfaceY(Math.floor(x), Math.floor(z)) + 1; }
@@ -96,6 +101,7 @@ var Animals = (function () {
     var model = buildAnimal(type);
     var a = {
       type: type, def: TYPES[type], group: model.group, hitbox: model.hitbox,
+      wool: model.wool, shearedBody: model.shearedBody,
       hp: TYPES[type].hp, home: { x: x, z: z }, target: null, moveT: Math.random() * 3,
       faceYaw: Math.random() * Math.PI * 2, speed: 0.8, fleeUntil: 0
     };
@@ -151,6 +157,24 @@ var Animals = (function () {
 
   // returns true if the tap was handled (an animal got bopped)
   function hit(a, playerPos) {
+    // shears: wool without hunting the sheep
+    if (a.type === "sheep" && Save.data.player.tools.shears && !a.sheared) {
+      a.sheared = true;
+      if (a.wool) a.wool.forEach(function (m) { m.visible = false; });
+      if (a.shearedBody) a.shearedBody.visible = true;
+      GameAudio.sfx.pop();
+      Game.grantItem("wool", 2);
+      Game.grantXP(2);
+      UI.toast("✂️ Snip snip! +2 wool — the sheep is fine!", 2600);
+      a.fleeUntil = performance.now() + 1400;
+      setTimeout(function () {
+        a.sheared = false;
+        if (a.wool) a.wool.forEach(function (m) { m.visible = true; });
+        if (a.shearedBody) a.shearedBody.visible = false;
+      }, 45000);
+      return true;
+    }
+
     a.hp -= 1;
     GameAudio.sfx.squeak();
     // flee directly away from the player
