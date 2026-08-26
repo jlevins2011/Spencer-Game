@@ -32,7 +32,7 @@ var Save = (function () {
         playMs: 0,
         daysPlayed: [],              // "YYYY-MM-DD" strings this week
         challenges: {},              // skill -> {tries, clean, mistakes}
-        wordStats: {},               // word -> {win, miss}
+        wordStats: {},               // word -> {win, miss, bySkill: {skill: {win, miss}}}
         lifetime: { challenges: 0, clean: 0, gems: 0, blocksMined: 0, blocksPlaced: 0, quests: 0 }
       }
     };
@@ -128,9 +128,13 @@ var Stats = (function () {
 
     var word = (challenge.word || "").toLowerCase();
     if (word) {
-      if (!s.wordStats[word]) s.wordStats[word] = { win: 0, miss: 0 };
+      if (!s.wordStats[word]) s.wordStats[word] = { win: 0, miss: 0, bySkill: {} };
       if (result.mistakes > 0) s.wordStats[word].miss += 1;
       else s.wordStats[word].win += 1;
+      if (!s.wordStats[word].bySkill) s.wordStats[word].bySkill = {};
+      if (!s.wordStats[word].bySkill[skill]) s.wordStats[word].bySkill[skill] = { win: 0, miss: 0 };
+      if (result.mistakes > 0) s.wordStats[word].bySkill[skill].miss += 1;
+      else s.wordStats[word].bySkill[skill].win += 1;
     }
 
     s.lifetime.challenges += 1;
@@ -162,7 +166,15 @@ var Stats = (function () {
     Object.keys(s.wordStats).forEach(function (w) {
       var ws = s.wordStats[w];
       ws.miss = Math.floor(ws.miss / 2);
-      ws.win  = Math.floor(ws.win  / 2);
+      ws.win  = Math.floor(ws.win / 2);
+      if (ws.bySkill) {
+        Object.keys(ws.bySkill).forEach(function (sk) {
+          var b = ws.bySkill[sk];
+          b.miss = Math.floor(b.miss / 2);
+          b.win = Math.floor(b.win / 2);
+          if (b.miss === 0 && b.win === 0) delete ws.bySkill[sk];
+        });
+      }
       if (ws.miss === 0 && ws.win === 0) delete s.wordStats[w];
     });
     Save.save();

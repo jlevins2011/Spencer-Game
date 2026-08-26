@@ -9,7 +9,7 @@ var CONFIG = {
   PLAYERS: [
     {
       id: "spencer", name: "Spencer", emoji: "⛏️",
-      module: "reading",                    // hear-and-tap + picture-to-word (no spelling)
+      module: "reading",                    // hear-and-tap, picture-to-word, independent read (no spelling)
       saveKey: "spencercraft_save_v2",      // original key: keeps his progress
       startLevel: 1,
       helpers: [

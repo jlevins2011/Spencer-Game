@@ -4,7 +4,7 @@ A Minecraft-style 3D world where the kids walk around, explore, mine, and build 
 and quietly get better at words while they do it.
 
 Three player profiles on the same page, each with its own save, difficulty, and weekly report:
-- **Spencer (7)** — reading only: hear a word and tap it, or match a big picture to the word (tap the picture or 🔊 to hear it — no spelling)
+- **Spencer (7)** — reading only: hear a word and tap it, independently read a written word and tap the picture (no audio of that word), or match a big picture to the word. No spelling.
 - **Penelope (10)** — spelling: standard 4th-5th grade lists, from "because" to "mischievous"
 - **Olivia (13)** — Latin: **Kraken Latin 1** (Natali H. Monnette / Canon Press), the 32-lesson logic-years syllabus
 
@@ -29,12 +29,12 @@ On a computer: WASD to move, drag the mouse to look, click to mine/place,
 SPACE to jump, B to toggle build mode.
 
 ### Where the learning hides
-- **❓ Word ore** (purple sparkly blocks) — Spencer: hear a word and tap it, or see a **big picture** and tap the matching word (tap the picture or 🔊 to hear it; sometimes a short sentence).
+- **❓ Word ore** (purple sparkly blocks) — Spencer: hear a word and tap it, **read a written word and tap the picture** (no audio of the word — that's independent reading), see a **big picture** and tap the matching word (tap the picture or 🔊 to hear it; sometimes a short sentence), and occasionally an experimental **say the word into the mic** (skip if the iPad mic isn't cooperating).
   Penelope: tap the correctly-spelled version among realistic misspellings.
   Olivia: hear the English, tap the Latin (Kraken Latin 1 vocabulary)
-- **🧰 Treasure chests** — Spencer: hear-and-tap or picture-to-word to pop the lock.
+- **🧰 Treasure chests** — Spencer: hear-and-tap, picture-to-word, or independent read-the-word.
   Penelope and Olivia: build the word from letter tiles.
-- **⛏️ Crafting pickaxe upgrades** — Spencer reads (hear-and-tap or a picture); Penelope and Olivia spell to craft
+- **⛏️ Crafting pickaxe upgrades** — Spencer reads (hear-and-tap, a picture, or independent reading); Penelope and Olivia spell to craft
 - **🔨 Workshop** — a **🔨 CRAFT!** button appears when you have the ingredients. Instant recipes (no quiz): wood → planks → sticks, then **doors**, **ladders**, **fences**, **beds**, **red wool**, and a **crafting table**. Place the table and tap it anytime to browse recipes. Tool recipes still use a word challenge: **shovel** (digs dirt/sand/snow fast), **axe** (chops wood fast), **shears** (snip sheep for wool — they keep hopping!), and pickaxe upgrades. **Buckets** (3 iron) scoop water and pour a pool somewhere else.
 - **🚪 Building extras** — tap a door to open/close it, tap a bed to set your spawn (falling into the void wakes you there), climb ladders, and peek through fences. Sky Harbor's control tower has a ladder up the stairwell.
 - **👧👦 Sibling quests** — each kid's siblings appear in-game with little quests
@@ -70,8 +70,10 @@ SPACE to jump, B to toggle build mode.
   (with a gem reward) before play continues. No coasting!
 
 Difficulty self-adjusts BOTH ways: consistent success unlocks harder words,
-and a rough patch automatically drops back to words the kid can win with
+and a rough patch automatically drops back to a tier where the kid can succeed
 (plus a head start toward climbing again), so nobody stays stuck or frustrated.
+Spencer's reading mix also leans toward the activity type he's weaker at —
+hearing a word is tracked separately from reading that same word with no audio.
 
 Words quietly ramp up in difficulty as each kid plays, and missed words come
 back around more often until they're nailed. Leveling up unlocks new worlds:

@@ -65,12 +65,38 @@ var Reports = (function () {
     return Math.round((c.clean / c.tries) * 100);
   }
 
+  var SKILL_SHORT = {
+    hear: "hears it",
+    read: "reads it",
+    picture: "picture meaning",
+    sentences: "sentences",
+    speak: "says it",
+    spot: "spots spelling",
+    spelling: "spells it"
+  };
+
   function struggleWords(limit) {
     var ws = Save.data.stats.wordStats;
     return Object.keys(ws)
-      .filter(function (w) { return ws[w].miss > 0 && ws[w].miss >= ws[w].win; })
-      .sort(function (a, b) { return ws[b].miss - ws[a].miss; })
-      .slice(0, limit || 6);
+      .map(function (w) {
+        var s = ws[w];
+        var weak = [];
+        if (s.bySkill && Object.keys(s.bySkill).length) {
+          Object.keys(s.bySkill).forEach(function (k) {
+            var b = s.bySkill[k];
+            if (b.miss > 0 && b.miss >= b.win) weak.push(SKILL_SHORT[k] || k);
+          });
+        } else if (s.miss > 0 && s.miss >= s.win) {
+          weak.push("overall");
+        }
+        return weak.length ? { word: w, miss: s.miss || 0, weak: weak } : null;
+      })
+      .filter(Boolean)
+      .sort(function (a, b) { return b.miss - a.miss; })
+      .slice(0, limit || 6)
+      .map(function (x) {
+        return x.word + " (" + x.weak.join(", ") + ")";
+      });
   }
 
   function masteredWords(limit) {
@@ -84,8 +110,11 @@ var Reports = (function () {
   var SKILL_LABELS = {
     sight: "Sight words (recognize on sight)",
     phonics: "Phonics (sounding out)",
+    hear: "Hearing a word and tapping it (auditory recognition)",
+    read: "Reading a word independently (no audio)",
     sentences: "Sentence reading",
-    picture: "Matching words to pictures",
+    picture: "Matching a picture to the written word (meaning)",
+    speak: "Saying a written word out loud (experimental)",
     spot: "Spotting correct spellings",
     spelling: "Spelling words out",
     "latin-vocab": "Latin vocabulary (Kraken Latin 1)",

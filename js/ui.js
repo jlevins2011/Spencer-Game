@@ -319,6 +319,7 @@ var UI = (function () {
 
   function craftIntro(ch, kindName) {
     if (ch && ch.kind === "picture") return "Tap the word that matches to craft your " + kindName + "!";
+    if (ch && ch.kind === "read") return "Read the word and tap the picture to craft your " + kindName + "!";
     if (ch && ch.kind !== "spell") return "Tap the word you hear to craft your " + kindName + "!";
     return "Spell the magic word to craft your " + kindName + "!";
   }
@@ -326,8 +327,8 @@ var UI = (function () {
   function startToolChallenge(kindName, onSuccess) {
     var ch = Learning.getChallenge("spell");
     presentChallenge(ch, function (result) {
-      Learning.reportResult(ch, result);
-      if (result.correct) onSuccess();
+      if (!result.skipped) Learning.reportResult(ch, result);
+      if (result.correct && !result.skipped) onSuccess();
     }, craftIntro(ch, kindName));
   }
 
@@ -444,8 +445,24 @@ var UI = (function () {
     $("overlay").classList.add("open");
   }
   function closeOverlay() {
+    GameAudio.stopListen();
     $("overlay").classList.remove("open");
     if (Game.running) Controls.setEnabled(true);
+  }
+
+  // Every 🔊 button must go through here so TTS is warmed in the same
+  // tap that requests speech (iPad Safari is picky about that).
+  function bindSpeak(id, getText, rate) {
+    var el = $(id);
+    if (!el) return;
+    el.addEventListener("pointerdown", function (e) {
+      e.stopPropagation();
+      // Do not preventDefault — iPad Safari needs this tap to count
+      // as the user gesture that unlocks speechSynthesis.
+      GameAudio.warm();
+      var text = typeof getText === "function" ? getText() : getText;
+      GameAudio.say(text, rate);
+    });
   }
 
   function celebrate(el) {
@@ -486,7 +503,8 @@ var UI = (function () {
           GameAudio.sfx.wrong();
           b.classList.add("wrong");
           setTimeout(function () { b.classList.remove("wrong"); }, 500);
-          setTimeout(function () { GameAudio.say(ch.speak || ch.word); }, 450);
+          GameAudio.warm();
+          GameAudio.say(ch.speak || ch.word);
         }
       });
       grid.appendChild(b);
@@ -499,14 +517,14 @@ var UI = (function () {
     var html =
       "<div class='ch-title'>" + (intro || "🔮 Word Ore!") + "</div>" +
       "<div class='ch-sub'>" + (ch.subtitle || "Tap the word you hear!") + "</div>" +
-      "<button class='speak-btn' id='ch-speak'>🔊</button>" +
+      "<button type='button' class='speak-btn' id='ch-speak'>🔊</button>" +
       "<div class='word-grid' id='ch-grid'></div>";
     openOverlay(html);
     fillWordChoices(ch, onDone, function () { return ch.answer || ch.word; });
-    $("ch-speak").addEventListener("pointerdown", function (e) {
-      e.stopPropagation(); GameAudio.say(spoken);
-    });
-    setTimeout(function () { GameAudio.say(spoken); }, 400);
+    bindSpeak("ch-speak", spoken);
+    // Speak in this same call stack so iPad still treats it as the tap
+    // that opened the overlay (a delayed speak is often silent).
+    GameAudio.say(spoken);
   }
 
   /* ---------------- challenge: big picture → tap the word ---------------- */
@@ -517,15 +535,16 @@ var UI = (function () {
       "<button type='button' class='picture-hero' id='ch-picture' aria-label='Hear the word'>" +
         (ch.emoji || "❓") + "</button>" +
       "<div class='ch-sub'>" + (ch.subtitle || "Tap the picture or 🔊 to hear it, then tap the word!") + "</div>" +
-      "<button class='speak-btn' id='ch-speak'>🔊</button>" +
+      "<button type='button' class='speak-btn' id='ch-speak'>🔊</button>" +
       "<div class='word-grid' id='ch-grid'></div>";
     openOverlay(html);
     function hear(e) {
       if (e) e.stopPropagation();
+      GameAudio.warm();
       GameAudio.say(spoken);
     }
     $("ch-picture").addEventListener("pointerdown", hear);
-    $("ch-speak").addEventListener("pointerdown", hear);
+    bindSpeak("ch-speak", spoken);
     fillWordChoices(ch, onDone, function () { return ch.answer || ch.word; }, function (word) {
       GameAudio.say(word);
     });
@@ -538,7 +557,7 @@ var UI = (function () {
     var html =
       "<div class='ch-title'>" + (introText || "🧰 Locked Chest!") + "</div>" +
       "<div class='ch-sub'>" + (ch.subtitle || ("Build the word" + (ch.emoji ? " for " + ch.emoji : ""))) + "</div>" +
-      "<button class='speak-btn' id='ch-speak'>🔊</button>" +
+      "<button type='button' class='speak-btn' id='ch-speak'>🔊</button>" +
       "<div class='spell-slots' id='ch-slots'></div>" +
       "<div class='tile-grid' id='ch-tiles'></div>";
     openOverlay(html);
@@ -591,10 +610,8 @@ var UI = (function () {
       tiles.appendChild(b);
     });
 
-    $("ch-speak").addEventListener("pointerdown", function (e) {
-      e.stopPropagation(); GameAudio.say(spoken);
-    });
-    setTimeout(function () { GameAudio.say(spoken); }, 400);
+    bindSpeak("ch-speak", spoken);
+    GameAudio.say(spoken);
   }
 
   /* ---------------- challenge: read the sentence ---------------- */
@@ -603,7 +620,7 @@ var UI = (function () {
     var html =
       "<div class='ch-title'>" + (introText || "📜 Secret Message!") + "</div>" +
       "<div class='sentence-text'>" + ch.text + "</div>" +
-      "<button class='speak-btn small' id='ch-speak'>🔊 Help me read it</button>" +
+      "<button type='button' class='speak-btn small' id='ch-speak'>🔊 Help me read it</button>" +
       "<div class='ch-sub'>" + (ch.subtitle || "Tap the picture that matches!") + "</div>" +
       "<div class='word-grid' id='ch-grid'></div>";
     openOverlay(html);
@@ -633,16 +650,134 @@ var UI = (function () {
       });
       grid.appendChild(b);
     });
-    $("ch-speak").addEventListener("pointerdown", function (e) {
-      e.stopPropagation(); GameAudio.say(ch.speak || ch.text, 0.8);
+    bindSpeak("ch-speak", function () { return ch.speak || ch.text; }, 0.8);
+  }
+
+  /* ---------------- challenge: read the word, tap the picture ---------------- */
+  function showRead(ch, onDone, introText) {
+    var mistakes = 0, done = false;
+    var html =
+      "<div class='ch-title'>" + (introText || "Read this word") + "</div>" +
+      "<div class='read-word' id='ch-read-word'>" + escapeHtml(ch.word.toUpperCase()) + "</div>" +
+      "<div class='ch-sub'>" + (ch.subtitle || "Read it yourself, then tap the picture!") + "</div>" +
+      "<button type='button' class='speak-btn small' id='ch-speak'>🔊 What do I do?</button>" +
+      "<div class='word-grid' id='ch-grid'></div>";
+    openOverlay(html);
+    var grid = $("ch-grid");
+    (ch.pictures || []).forEach(function (pic) {
+      var b = document.createElement("button");
+      b.className = "word-block emoji-block";
+      b.textContent = pic.emoji;
+      b.setAttribute("aria-label", "picture choice");
+      b.addEventListener("pointerdown", function (e) {
+        e.stopPropagation();
+        if (done) return;
+        if (pic.emoji === ch.answer) {
+          done = true;
+          GameAudio.sfx.correct();
+          b.classList.add("right");
+          celebrate($("overlay-card"));
+          setTimeout(function () {
+            closeOverlay();
+            onDone({ correct: true, mistakes: mistakes });
+          }, 900);
+        } else {
+          mistakes++;
+          GameAudio.sfx.wrong();
+          b.classList.add("wrong");
+          setTimeout(function () { b.classList.remove("wrong"); }, 500);
+        }
+      });
+      grid.appendChild(b);
     });
+    // Instruction only — never speaks the target word.
+    bindSpeak("ch-speak", "Read this word, then tap the picture that matches.");
+  }
+
+  /* ---------------- experimental: say the written word aloud ---------------- */
+  function showSpeak(ch, onDone, introText) {
+    var mistakes = 0, done = false, listening = false;
+    var html =
+      "<div class='ch-title'>" + (introText || "Say this word") + "</div>" +
+      "<div class='read-word'>" + escapeHtml(ch.word.toUpperCase()) + "</div>" +
+      "<div class='ch-sub'>" + (ch.subtitle || "Tap the mic and say the word.") + "</div>" +
+      "<button type='button' class='speak-btn small' id='ch-mic'>🎤 Tap and say it</button>" +
+      "<div class='ch-sub' id='ch-listen-status'></div>" +
+      "<button type='button' class='ghost-btn' id='ch-skip-mic'>Skip — mic not working</button>";
+    openOverlay(html);
+    var status = $("ch-listen-status");
+    function finish(result) {
+      if (done) return;
+      done = true;
+      GameAudio.stopListen();
+      setTimeout(function () {
+        closeOverlay();
+        onDone(result);
+      }, result.skipped ? 400 : 900);
+    }
+    function skip(reason) {
+      status.textContent = reason || "No worries — we'll try this another time.";
+      GameAudio.sfx.pop();
+      finish({ correct: true, mistakes: 0, skipped: true });
+    }
+    $("ch-skip-mic").addEventListener("pointerdown", function (e) {
+      e.stopPropagation();
+      skip("Skipped. You can keep playing!");
+    });
+    if (!GameAudio.canListen()) {
+      skip("This iPad couldn't start the microphone. Skipping.");
+      return;
+    }
+    $("ch-mic").addEventListener("pointerdown", function (e) {
+      e.stopPropagation();
+      if (done || listening) return;
+      listening = true;
+      GameAudio.warm();
+      status.textContent = "Listening… say " + "the word!";
+      $("ch-mic").textContent = "🎤 Listening…";
+      GameAudio.listenFor(ch.word, function (res) {
+        listening = false;
+        if (done) return;
+        if (res.matched) {
+          GameAudio.sfx.correct();
+          status.textContent = "Got it!";
+          celebrate($("overlay-card"));
+          finish({ correct: true, mistakes: mistakes });
+          return;
+        }
+        if (res.error === "unavailable" || res.error === "start-failed" ||
+            res.error === "not-allowed" || res.error === "service-not-allowed") {
+          skip("Couldn't use the mic here. Skipping — not a miss.");
+          return;
+        }
+        if (res.error === "ended" && !res.heard) {
+          $("ch-mic").textContent = "🎤 Tap and say it";
+          status.textContent = "Didn't catch that. Tap the mic and try again.";
+          return;
+        }
+        mistakes++;
+        GameAudio.sfx.wrong();
+        $("ch-mic").textContent = "🎤 Try again";
+        status.textContent = res.heard
+          ? "Heard something else. Tap the mic and say it again!"
+          : "Didn't catch that. Tap the mic and try once more.";
+        if (mistakes >= 2) {
+          status.textContent = "Nice try! Let's keep playing.";
+          finish({ correct: false, mistakes: mistakes });
+        }
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
   function showChallenge(kind, onDone, intro) {
     var ch = Learning.getChallenge(kind);
     if (!ch) { onDone({ correct: true, mistakes: 0 }); return; }
     var wrapped = function (result) {
-      Learning.reportResult(ch, result);
+      if (!result.skipped) Learning.reportResult(ch, result);
       onDone(result);
     };
     presentChallenge(ch, wrapped, intro);
@@ -653,6 +788,8 @@ var UI = (function () {
     if (ch.kind === "spell") showSpell(ch, onDone, intro);
     else if (ch.kind === "sentence") showSentence(ch, onDone, intro);
     else if (ch.kind === "picture") showPicture(ch, onDone, intro);
+    else if (ch.kind === "read") showRead(ch, onDone, intro);
+    else if (ch.kind === "speak") showSpeak(ch, onDone, intro);
     else showPick(ch, onDone, intro);
   }
 
@@ -734,7 +871,7 @@ var UI = (function () {
       var kind = Math.random() < 0.5 ? "spell" : "pick";
       var ch = Learning.getChallenge(kind, { boost: 1 });
       presentChallenge(ch, function (result) {
-        Learning.reportResult(ch, result);
+        if (!result.skipped) Learning.reportResult(ch, result);
         if (!result.correct) return;
         Game.grantGems(3);
         Game.grantXP(25);
@@ -807,7 +944,7 @@ var UI = (function () {
       var kind = Math.random() < 0.5 ? "spell" : "pick";
       var ch = Learning.getChallenge(kind, { boost: 1 });
       presentChallenge(ch, function (result) {
-        Learning.reportResult(ch, result);
+        if (!result.skipped) Learning.reportResult(ch, result);
         if (!result.correct) return;
         Game.grantGems(3);
         Game.grantXP(25);
@@ -877,12 +1014,12 @@ var UI = (function () {
         "<div class='npc-head' style='--hair:" + npc.def.hair + ";--shirt:" + npc.def.shirt + "'></div>" +
         "<div class='ch-title'>" + name + "</div>" +
         "<div class='sentence-text'>" + (q.sister === name ? q.text : "Go help " + q.sister + " first! " + q.icon) + "</div>" +
-        "<button class='speak-btn small' id='dlg-speak'>🔊</button>" +
+        "<button type='button' class='speak-btn small' id='dlg-speak'>🔊</button>" +
         "<button class='big-btn' id='dlg-ok'>OK!</button>";
       openOverlay(remindHtml);
-      $("dlg-speak").addEventListener("pointerdown", function () {
-        GameAudio.say(q.sister === name ? q.text : "Go help " + q.sister + " first!", 0.8);
-      });
+      bindSpeak("dlg-speak", function () {
+        return q.sister === name ? q.text : "Go help " + q.sister + " first!";
+      }, 0.8);
       $("dlg-ok").addEventListener("pointerdown", closeOverlay);
       return;
     }
@@ -895,7 +1032,7 @@ var UI = (function () {
       "<div class='npc-head' style='--hair:" + npc.def.hair + ";--shirt:" + npc.def.shirt + "'></div>" +
       "<div class='ch-title'>" + name + "</div>" +
       "<div class='sentence-text'>Hi " + CONFIG.PLAYER_NAME + "! " + quest.text + "</div>" +
-      "<button class='speak-btn small' id='dlg-speak'>🔊 Help me read it</button>" +
+      "<button type='button' class='speak-btn small' id='dlg-speak'>🔊 Help me read it</button>" +
       "<div class='ch-sub'>What does " + name + " need?</div>" +
       "<div class='word-grid' id='dlg-grid'></div>" +
       "<button class='ghost-btn' id='dlg-later'>Maybe later</button>";
@@ -931,7 +1068,7 @@ var UI = (function () {
       });
       grid.appendChild(b);
     });
-    $("dlg-speak").addEventListener("pointerdown", function () { GameAudio.say(quest.text, 0.8); });
+    bindSpeak("dlg-speak", quest.text, 0.8);
     $("dlg-later").addEventListener("pointerdown", closeOverlay);
   }
 
@@ -1117,6 +1254,7 @@ var UI = (function () {
 
   function init() {
     document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    document.addEventListener("pointerdown", function () { GameAudio.warm(); }, true);
     $("btn-pause").addEventListener("pointerdown", function (e) { e.stopPropagation(); showPause(); });
     $("btn-bag").addEventListener("pointerdown", function (e) { e.stopPropagation(); showInventory(); });
     $("btn-mode").addEventListener("pointerdown", function (e) { e.stopPropagation(); Game.toggleMode(); });
@@ -1134,7 +1272,7 @@ var UI = (function () {
     init: init, toast: toast, updateHud: updateHud, updateHotbar: updateHotbar,
     updateQuestHud: updateQuestHud, updateModeButton: updateModeButton,
     selectHotbar: selectHotbar, selectedItem: selectedItem,
-    showChallenge: showChallenge, showDialogue: showDialogue,
+    showChallenge: showChallenge, presentChallenge: presentChallenge, showDialogue: showDialogue,
     showInventory: showInventory, toggleInventory: toggleInventory,
     showLevelUp: showLevelUp, showPause: showPause, showHome: showHome, hideHome: hideHome,
     rankFor: rankFor, xpNeeded: xpNeeded, nextCraftInfo: nextCraftInfo, showWorkshop: showWorkshop,
