@@ -65,21 +65,38 @@ var Reports = (function () {
     return Math.round((c.clean / c.tries) * 100);
   }
 
+  var SKILL_SHORT = {
+    hear: "hears it",
+    read: "reads it",
+    picture: "picture meaning",
+    sentences: "sentences",
+    speak: "says it",
+    spot: "spots spelling",
+    spelling: "spells it"
+  };
+
   function struggleWords(limit) {
     var ws = Save.data.stats.wordStats;
     return Object.keys(ws)
-      .filter(function (w) {
+      .map(function (w) {
         var s = ws[w];
+        var weak = [];
         if (s.bySkill && Object.keys(s.bySkill).length) {
-          return Object.keys(s.bySkill).some(function (k) {
+          Object.keys(s.bySkill).forEach(function (k) {
             var b = s.bySkill[k];
-            return b.miss > 0 && b.miss >= b.win;
+            if (b.miss > 0 && b.miss >= b.win) weak.push(SKILL_SHORT[k] || k);
           });
+        } else if (s.miss > 0 && s.miss >= s.win) {
+          weak.push("overall");
         }
-        return s.miss > 0 && s.miss >= s.win;
+        return weak.length ? { word: w, miss: s.miss || 0, weak: weak } : null;
       })
-      .sort(function (a, b) { return ws[b].miss - ws[a].miss; })
-      .slice(0, limit || 6);
+      .filter(Boolean)
+      .sort(function (a, b) { return b.miss - a.miss; })
+      .slice(0, limit || 6)
+      .map(function (x) {
+        return x.word + " (" + x.weak.join(", ") + ")";
+      });
   }
 
   function masteredWords(limit) {

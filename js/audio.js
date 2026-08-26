@@ -60,12 +60,23 @@ var GameAudio = (function () {
   }
 
   // Chrome goes mute if speechSynthesis sits idle; a pause/resume
-  // keeps the engine awake without saying anything.
+  // keeps the engine awake without saying anything. Skip this on
+  // Safari — pause() there can drop the next real utterance.
   if (window.speechSynthesis) {
     setInterval(function () {
-      if (speechSynthesis.speaking) return;
+      if (isSafariLike()) return;
+      if (speechSynthesis.speaking || speechSynthesis.pending) return;
       try { speechSynthesis.pause(); speechSynthesis.resume(); } catch (e) {}
     }, 10000);
+  }
+
+  // iPad Safari reports as Macintosh + touch. Chrome/CriOS need a
+  // different cancel()+retry dance than Safari.
+  function isSafariLike() {
+    var ua = navigator.userAgent || "";
+    if (/iPhone|iPod|iPad/i.test(ua)) return true;
+    if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return true;
+    return /Safari/i.test(ua) && !/Chrome|CriOS|Chromium|Android/i.test(ua);
   }
 
   function say(text, rate) {
@@ -79,26 +90,31 @@ var GameAudio = (function () {
     var u = makeUtterance(text, rate);
     u.onstart = function () { started = true; };
 
+    function kick(utter) {
+      try { speechSynthesis.resume(); } catch (e) {}
+      try { speechSynthesis.speak(utter); } catch (e) {}
+    }
+
+    // Safari: cancel() often kills the follow-up speak() even inside the
+    // same tap, so we just queue. Chrome: cancel()+speak() in one tick is
+    // frequently silent, so cancel then retry once a moment later.
+    if (isSafariLike()) {
+      kick(u);
+      return;
+    }
+
     try {
       if (speechSynthesis.speaking || speechSynthesis.pending) {
         speechSynthesis.cancel();
       }
     } catch (e) {}
 
-    function kick() {
-      try { speechSynthesis.resume(); } catch (e) {}
-      try { speechSynthesis.speak(u); } catch (e) {}
-    }
-
-    // Speak immediately so iPad Safari still counts this as a user tap.
-    kick();
-    // Chrome often drops the first speak() after cancel(); retry once
-    // with a fresh utterance if nothing started.
+    kick(u);
     setTimeout(function () {
       if (started || speechSynthesis.speaking) return;
       u = makeUtterance(text, rate);
       u.onstart = function () { started = true; };
-      kick();
+      kick(u);
     }, 70);
   }
 

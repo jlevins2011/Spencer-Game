@@ -166,11 +166,22 @@ var Learning = (function () {
   }
 
   // Hunger for a skill: untested skills get a nudge; skills with a
-  // weak first-try rate get asked more often.
+  // weak first-try rate get asked more often. Older saves stored hear
+  // under "pick" and sentences under "sentence".
   function skillNeed(name) {
-    var c = (Save.data.stats.challenges || {})[name];
-    if (!c || c.tries < 2) return 1.2;
-    var rate = c.clean / Math.max(1, c.tries);
+    var bag = Save.data.stats.challenges || {};
+    var keys = [name];
+    if (name === "hear") keys.push("pick");
+    if (name === "sentences") keys.push("sentence");
+    var tries = 0, clean = 0;
+    keys.forEach(function (k) {
+      var c = bag[k];
+      if (!c) return;
+      tries += c.tries || 0;
+      clean += c.clean || 0;
+    });
+    if (tries < 2) return 1.2;
+    var rate = clean / Math.max(1, tries);
     return 0.35 + (1 - rate) * 1.8;
   }
 

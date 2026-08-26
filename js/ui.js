@@ -457,7 +457,8 @@ var UI = (function () {
     if (!el) return;
     el.addEventListener("pointerdown", function (e) {
       e.stopPropagation();
-      e.preventDefault();
+      // Do not preventDefault — iPad Safari needs this tap to count
+      // as the user gesture that unlocks speechSynthesis.
       GameAudio.warm();
       var text = typeof getText === "function" ? getText() : getText;
       GameAudio.say(text, rate);
@@ -502,7 +503,8 @@ var UI = (function () {
           GameAudio.sfx.wrong();
           b.classList.add("wrong");
           setTimeout(function () { b.classList.remove("wrong"); }, 500);
-          setTimeout(function () { GameAudio.warm(); GameAudio.say(ch.speak || ch.word); }, 450);
+          GameAudio.warm();
+          GameAudio.say(ch.speak || ch.word);
         }
       });
       grid.appendChild(b);
@@ -520,7 +522,9 @@ var UI = (function () {
     openOverlay(html);
     fillWordChoices(ch, onDone, function () { return ch.answer || ch.word; });
     bindSpeak("ch-speak", spoken);
-    setTimeout(function () { GameAudio.say(spoken); }, 400);
+    // Speak in this same call stack so iPad still treats it as the tap
+    // that opened the overlay (a delayed speak is often silent).
+    GameAudio.say(spoken);
   }
 
   /* ---------------- challenge: big picture → tap the word ---------------- */
@@ -535,7 +539,7 @@ var UI = (function () {
       "<div class='word-grid' id='ch-grid'></div>";
     openOverlay(html);
     function hear(e) {
-      if (e) { e.stopPropagation(); e.preventDefault(); }
+      if (e) e.stopPropagation();
       GameAudio.warm();
       GameAudio.say(spoken);
     }
@@ -607,7 +611,7 @@ var UI = (function () {
     });
 
     bindSpeak("ch-speak", spoken);
-    setTimeout(function () { GameAudio.say(spoken); }, 400);
+    GameAudio.say(spoken);
   }
 
   /* ---------------- challenge: read the sentence ---------------- */
@@ -697,7 +701,7 @@ var UI = (function () {
       "<div class='ch-title'>" + (introText || "Say this word") + "</div>" +
       "<div class='read-word'>" + escapeHtml(ch.word.toUpperCase()) + "</div>" +
       "<div class='ch-sub'>" + (ch.subtitle || "Tap the mic and say the word.") + "</div>" +
-      "<button type='button' class='speak-btn' id='ch-mic'>🎤 Tap and say it</button>" +
+      "<button type='button' class='speak-btn small' id='ch-mic'>🎤 Tap and say it</button>" +
       "<div class='ch-sub' id='ch-listen-status'></div>" +
       "<button type='button' class='ghost-btn' id='ch-skip-mic'>Skip — mic not working</button>";
     openOverlay(html);
@@ -726,7 +730,6 @@ var UI = (function () {
     }
     $("ch-mic").addEventListener("pointerdown", function (e) {
       e.stopPropagation();
-      e.preventDefault();
       if (done || listening) return;
       listening = true;
       GameAudio.warm();
