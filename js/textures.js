@@ -50,7 +50,8 @@ var Textures = (function () {
     FLOWER_RED: 27, FLOWER_YELLOW: 28, MUSH_SMALL: 29, SANDSTONE: 30, CRYSTAL_GRASS: 31,
     LEAVES_PINK: 32, BRICK: 33,
     DEEPSLATE: 34, AMETHYST: 35, MYTHRIL: 36, VOIDROCK: 37, WOOL: 38,
-    GLASS: 39, TORCH: 40
+    GLASS: 39, TORCH: 40,
+    ASPHALT: 41, CONCRETE: 42, PAINT_YELLOW: 43, PAINT_WHITE: 44
   };
 
   function paintAll() {
@@ -141,6 +142,13 @@ var Textures = (function () {
     [[6,1],[7,0],[8,0],[9,1],[7,1],[8,1],[6,2],[9,2],[7,2],[8,2],[7,3],[8,3]].forEach(function (p) {
       px(0, 5, p[0], p[1], p[1] < 2 ? "#ffe66b" : "#ff9a3c");
     });
+
+    fill(1, 5, "#2c2c30", ["#26262a", "#34343a", "#222226"]);                       // asphalt
+    for (var ax = 0; ax < TILE; ax += 4) px(1, 5, ax, ax % TILE, "#3a3a40");
+    fill(2, 5, "#b8b4aa", ["#aeaaa0", "#c4c0b6", "#b0aca2"]);                       // concrete
+    for (var cx2 = 0; cx2 < TILE; cx2++) px(2, 5, cx2, 7, "#a8a49a");
+    fill(3, 5, "#f0c830", ["#e8bc20", "#f8d448"]);                                  // yellow paint
+    fill(4, 5, "#f4f4f0", ["#ffffff", "#e8e8e2"]);                                  // white paint
   }
 
   // map tile constant -> [tx, ty]

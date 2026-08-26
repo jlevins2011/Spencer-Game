@@ -40,8 +40,11 @@ SPACE to jump, B to toggle build mode.
   and the hurt-leg boot). His challenges use harder words than the kid's
   current level. 3 perfect-ish wins earn the **Voidbreaker Drill** (breaks
   bedrock, opening the **Deep Dark** — 20 layers of deepslate, extra diamonds,
-  gem-paying amethyst, and ultra-rare mythril at the bottom). 8 wins earn the
-  **Thunder Pick** (mines twice as fast). After that he pays out gems.
+  gem-paying amethyst, and ultra-rare mythril at the bottom). 5 wins earn
+  **Pilot Wings** and unlock **Sky Harbor** ✈️ — Daddy's airport, with a
+  runway, control tower, hangar, and parked airplanes (talk to Daddy anytime
+  for a ride there). 8 wins earn the **Thunder Pick** (mines twice as fast).
+  After that he pays out gems.
 - **☕ Mommy's SUPER CHALLENGES** — Mommy is nearby with dark brown hair and
   her teacup. Same harder-word quizzes as Daddy, but her gifts are Minecraft
   *capabilities*. 3 wins earn the **Magic Furnace**: smelt iron ore + coal
@@ -70,6 +73,7 @@ and a rough patch automatically drops back to words the kid can win with
 Words quietly ramp up in difficulty as each kid plays, and missed words come
 back around more often until they're nailed. Leveling up unlocks new worlds:
 Sunny Meadow → Golden Desert (Lv 3) → Snowy Peaks (Lv 5) → Mushroom Isle (Lv 7) → Crystal Caves (Lv 9).
+Daddy's Pilot Wings also unlock **Sky Harbor** ✈️ (an airport — not a level unlock).
 (Penelope starts at level 3. Olivia starts at level 5.)
 
 ## Weekly parent reports (1-minute setup, no accounts)

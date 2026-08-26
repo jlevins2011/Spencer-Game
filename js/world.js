@@ -2,7 +2,8 @@
 /* ============================================================
    VOXEL WORLD — block registry, terrain generation, chunk
    meshing, block edits. Finite 128x128 island per world;
-   5 themed worlds unlock as Spencer levels up.
+   5 themed worlds unlock as kids level up, plus Sky Harbor — an
+   airport Daddy unlocks with Pilot Wings after super-challenges.
    ============================================================ */
 
 /* ---------------- block registry ---------------- */
@@ -13,7 +14,8 @@ var B = {
   ICE: 21, FLOWER_RED: 22, FLOWER_YELLOW: 23, MUSH_SMALL: 24, SANDSTONE: 25,
   CRYSTAL_GRASS: 26, LEAVES_PINK: 27, BRICK: 28,
   DEEPSLATE: 29, AMETHYST: 30, MYTHRIL: 31, VOIDROCK: 32, WOOL: 33,
-  GLASS: 34, TORCH: 35
+  GLASS: 34, TORCH: 35,
+  ASPHALT: 36, CONCRETE: 37, PAINT_YELLOW: 38, PAINT_WHITE: 39
 };
 
 var BLOCKS = (function () {
@@ -53,6 +55,10 @@ var BLOCKS = (function () {
   def(B.WOOL,     "wool",     { tiles: { top: T.WOOL, bottom: T.WOOL, side: T.WOOL }, drop: "wool", hard: 250, icon: "🧶" });
   def(B.GLASS,    "glass",    { tiles: { top: T.GLASS, bottom: T.GLASS, side: T.GLASS }, drop: "glass", hard: 200, icon: "🪟", opaque: false });
   def(B.TORCH,    "torch",    { tiles: { top: T.TORCH }, cross: true, solid: false, drop: "torch", hard: 60, icon: "🕯️" });
+  def(B.ASPHALT,  "asphalt",  { tiles: { top: T.ASPHALT, bottom: T.ASPHALT, side: T.ASPHALT }, drop: "asphalt", hard: 500, icon: "⬛" });
+  def(B.CONCRETE, "concrete", { tiles: { top: T.CONCRETE, bottom: T.CONCRETE, side: T.CONCRETE }, drop: "concrete", hard: 550, icon: "⬜" });
+  def(B.PAINT_YELLOW, "yellow paint", { tiles: { top: T.PAINT_YELLOW, bottom: T.PAINT_YELLOW, side: T.PAINT_YELLOW }, drop: "yellow paint", hard: 200, icon: "🟨" });
+  def(B.PAINT_WHITE, "white paint", { tiles: { top: T.PAINT_WHITE, bottom: T.PAINT_WHITE, side: T.PAINT_WHITE }, drop: "white paint", hard: 200, icon: "⬜" });
   def(B.CACTUS,   "cactus",   { tiles: { top: T.CACTUS_TOP, bottom: T.CACTUS_TOP, side: T.CACTUS_SIDE }, drop: "cactus", hard: 250, icon: "🌵" });
   def(B.MUSH_STEM,"mushroom stem", { tiles: { top: T.MUSH_STEM, bottom: T.MUSH_STEM, side: T.MUSH_STEM }, drop: "mushroom", hard: 300, icon: "🍄" });
   def(B.MUSH_CAP, "mushroom cap",  { tiles: { top: T.MUSH_CAP, bottom: T.MUSH_STEM, side: T.MUSH_CAP }, drop: "mushroom", hard: 300, icon: "🍄" });
@@ -77,7 +83,9 @@ var ITEM_TO_BLOCK = {
   ice: B.ICE, flower: B.FLOWER_RED, sandstone: B.SANDSTONE,
   "pink leaves": B.LEAVES_PINK, brick: B.BRICK,
   deepslate: B.DEEPSLATE, amethyst: B.AMETHYST, mythril: B.MYTHRIL,
-  wool: B.WOOL, "iron ore": B.IRON, glass: B.GLASS, torch: B.TORCH
+  wool: B.WOOL, "iron ore": B.IRON, glass: B.GLASS, torch: B.TORCH,
+  asphalt: B.ASPHALT, concrete: B.CONCRETE,
+  "yellow paint": B.PAINT_YELLOW, "white paint": B.PAINT_WHITE
 };
 var ITEM_ICON = {
   dirt: "🟫", stone: "🪨", sand: "🟨", wood: "🪵", leaves: "🍃", planks: "🟧",
@@ -86,7 +94,8 @@ var ITEM_ICON = {
   "pink leaves": "🌸", brick: "🧱",
   deepslate: "⬛", amethyst: "🟣", mythril: "🌀",
   wool: "🧶", meat: "🍖", "iron ore": "⛓️", glass: "🪟", torch: "🕯️",
-  "cooked meat": "🍗"
+  "cooked meat": "🍗",
+  asphalt: "⬛", concrete: "⬜", "yellow paint": "🟨", "white paint": "⬜"
 };
 
 /* ---------------- world definitions ---------------- */
@@ -100,7 +109,11 @@ var WORLD_DEFS = [
   { id: "mushroom", name: "Mushroom Isle",    emoji: "🍄", level: 7, sky: 0xd9b8e8, fog: 0xe8d5f2,
     surface: B.GRASS, under: B.DIRT, base: 13, amp: 6, water: 11, trees: 0, flowers: 0.01, cactus: 0, mush: 0.008, crystal: 0, leaves: B.LEAVES },
   { id: "crystal",  name: "Crystal Caves",    emoji: "🔮", level: 9, sky: 0x2e2352, fog: 0x4a3a7a,
-    surface: B.CRYSTAL_GRASS, under: B.STONE, base: 14, amp: 8, water: -1, trees: 0.006, flowers: 0.015, cactus: 0, mush: 0, crystal: 0.008, glow: 0.004, leaves: B.LEAVES_PINK }
+    surface: B.CRYSTAL_GRASS, under: B.STONE, base: 14, amp: 8, water: -1, trees: 0.006, flowers: 0.015, cactus: 0, mush: 0, crystal: 0.008, glow: 0.004, leaves: B.LEAVES_PINK },
+  { id: "airport",  name: "Sky Harbor",       emoji: "✈️", level: 1, needTool: "wings",
+    sky: 0x6eb5e8, fog: 0xc5e4f5,
+    surface: B.GRASS, under: B.DIRT, base: 14, amp: 2.2, water: 10, trees: 0.005, flowers: 0.02, cactus: 0, mush: 0, crystal: 0, leaves: B.LEAVES,
+    spawn: { x: 64, z: 30, yaw: Math.PI } }
 ];
 
 /* ---------------- the world ---------------- */
@@ -233,6 +246,8 @@ var World = (function () {
         data[idx(x, above, z)] = B.CHEST;         // surface treasure chest
       }
     }
+
+    if (def.id === "airport") stampAirport();
   }
 
   function plantTree(x, y, z, def) {
@@ -258,6 +273,186 @@ var World = (function () {
     for (var dx = -1; dx <= 1; dx++) for (var dz = -1; dz <= 1; dz++) {
       var cx = x + dx, cy = y + h, cz = z + dz;
       if (inBounds(cx, cy, cz)) data[idx(cx, cy, cz)] = B.MUSH_CAP;
+    }
+  }
+
+  /* ----- Sky Harbor: flatten a plateau and stamp a real airport ----- */
+  function stampAirport() {
+    var Y = 14;          // field elevation
+
+    function put(x, y, z, b) {
+      if (inBounds(x, y, z)) data[idx(x, y, z)] = b;
+    }
+    function clearAbove(x, z, y0) {
+      var y;
+      for (y = y0 + 1; y < SY; y++) put(x, y, z, B.AIR);
+    }
+    function column(x, z, top) {
+      var y;
+      for (y = 1; y < Y; y++) put(x, y, z, y >= Y - 3 ? B.DIRT : B.STONE);
+      put(x, Y, z, top);
+      clearAbove(x, z, Y);
+    }
+    function pad(x0, z0, x1, z1, top) {
+      var x, z;
+      for (x = x0; x <= x1; x++) for (z = z0; z <= z1; z++) column(x, z, top);
+    }
+    function box(x0, y0, z0, x1, y1, z1, b) {
+      var x, y, z;
+      for (x = x0; x <= x1; x++) for (y = y0; y <= y1; y++) for (z = z0; z <= z1; z++) put(x, y, z, b);
+    }
+
+    // grassy airfield (wipes random trees off the plateau)
+    pad(22, 18, 112, 110, B.GRASS);
+
+    // ---- RUNWAY (heading 18/36, along Z) ----
+    var rx0 = 58, rx1 = 71, rz0 = 22, rz1 = 106;
+    pad(rx0, rz0, rx1, rz1, B.ASPHALT);
+    var x, z, y, i;
+    // white edge lines
+    for (z = rz0; z <= rz1; z++) {
+      put(rx0, Y, z, B.PAINT_WHITE);
+      put(rx1, Y, z, B.PAINT_WHITE);
+    }
+    // yellow centerline dashes
+    for (z = rz0 + 4; z <= rz1 - 4; z++) {
+      if (Math.floor((z - rz0) / 3) % 2 === 0) {
+        put(64, Y, z, B.PAINT_YELLOW);
+        put(65, Y, z, B.PAINT_YELLOW);
+      }
+    }
+    // threshold bars at both ends
+    for (x = rx0 + 1; x <= rx1 - 1; x++) {
+      if ((x - rx0) % 2 === 0) {
+        put(x, Y, rz0 + 1, B.PAINT_WHITE);
+        put(x, Y, rz0 + 2, B.PAINT_WHITE);
+        put(x, Y, rz1 - 1, B.PAINT_WHITE);
+        put(x, Y, rz1 - 2, B.PAINT_WHITE);
+      }
+    }
+    // touchdown marks
+    for (i = 0; i < 3; i++) {
+      var tz = rz0 + 14 + i * 3;
+      put(rx0 + 3, Y, tz, B.PAINT_WHITE);
+      put(rx0 + 4, Y, tz, B.PAINT_WHITE);
+      put(rx1 - 3, Y, tz, B.PAINT_WHITE);
+      put(rx1 - 4, Y, tz, B.PAINT_WHITE);
+      tz = rz1 - 14 - i * 3;
+      put(rx0 + 3, Y, tz, B.PAINT_WHITE);
+      put(rx0 + 4, Y, tz, B.PAINT_WHITE);
+      put(rx1 - 3, Y, tz, B.PAINT_WHITE);
+      put(rx1 - 4, Y, tz, B.PAINT_WHITE);
+    }
+    // runway edge lights
+    for (z = rz0; z <= rz1; z += 8) {
+      put(rx0 - 1, Y + 1, z, B.GLOW);
+      put(rx1 + 1, Y + 1, z, B.GLOW);
+    }
+
+    // taxiway to the east apron
+    pad(rx1 + 1, 58, 88, 67, B.ASPHALT);
+
+    // apron
+    pad(78, 48, 110, 84, B.CONCRETE);
+
+    // ---- TERMINAL (north of spawn, glass wall facing the runway) ----
+    var tx0 = 94, tx1 = 109, tz0 = 70, tz1 = 84;
+    box(tx0, Y + 1, tz0, tx1, Y + 5, tz1, B.BRICK);
+    // hollow interior
+    box(tx0 + 1, Y + 1, tz0 + 1, tx1 - 1, Y + 4, tz1 - 1, B.AIR);
+    // glass curtain toward the runway (west)
+    for (z = tz0 + 1; z <= tz1 - 1; z++) {
+      put(tx0, Y + 2, z, B.GLASS);
+      put(tx0, Y + 3, z, B.GLASS);
+      put(tx0, Y + 4, z, B.GLASS);
+    }
+    // doorway
+    put(tx0, Y + 1, 77, B.AIR);
+    put(tx0, Y + 2, 77, B.AIR);
+    // roof
+    box(tx0 - 1, Y + 6, tz0 - 1, tx1 + 1, Y + 6, tz1 + 1, B.CONCRETE);
+    // doors onto the apron (south) and toward the runway (west)
+    put(100, Y + 1, tz0, B.AIR);
+    put(100, Y + 2, tz0, B.AIR);
+    put(101, Y + 1, tz0, B.AIR);
+    put(101, Y + 2, tz0, B.AIR);
+    put(tx0, Y + 1, 77, B.AIR);
+    put(tx0, Y + 2, 77, B.AIR);
+    put(tx1 - 2, Y + 1, tz0 + 3, B.WORD_ORE);
+    put(tx1 - 2, Y + 1, tz1 - 3, B.CHEST);
+
+    // ---- CONTROL TOWER ----
+    var twx = 96, twz = 72;
+    box(twx, Y + 1, twz, twx + 3, Y + 12, twz + 3, B.BRICK);
+    box(twx + 1, Y + 1, twz + 1, twx + 2, Y + 11, twz + 2, B.AIR); // stairwell
+    box(twx, Y + 13, twz, twx + 3, Y + 15, twz + 3, B.GLASS);
+    put(twx + 1, Y + 16, twz + 1, B.GLOW);
+    put(twx + 2, Y + 16, twz + 2, B.GLOW);
+    box(twx, Y + 16, twz, twx + 3, Y + 16, twz + 3, B.CONCRETE);
+    put(twx + 1, Y + 16, twz + 1, B.GLOW);
+    put(twx + 2, Y + 16, twz + 2, B.GLOW);
+
+    // windsock
+    for (y = Y + 1; y <= Y + 6; y++) put(90, y, 88, B.LOG);
+    put(90, Y + 7, 88, B.PAINT_YELLOW);
+    put(91, Y + 7, 88, B.PAINT_YELLOW);
+
+    // ---- HANGAR (west of runway, open toward the field) ----
+    var hx0 = 26, hx1 = 48, hz0 = 50, hz1 = 76;
+    pad(hx0, hz0, hx1, hz1, B.CONCRETE);
+    box(hx0, Y + 1, hz0, hx1, Y + 7, hz0, B.BRICK);           // south wall
+    box(hx0, Y + 1, hz1, hx1, Y + 7, hz1, B.BRICK);           // north wall
+    box(hx0, Y + 1, hz0, hx0, Y + 7, hz1, B.BRICK);           // west wall (back)
+    box(hx0, Y + 8, hz0, hx1, Y + 8, hz1, B.PLANKS);          // roof
+    put(hx0 + 4, Y + 1, hz0 + 4, B.CHEST);
+    put(hx0 + 6, Y + 1, hz0 + 4, B.WORD_ORE);
+    put(hx0 + 4, Y + 1, hz1 - 4, B.GLOW);
+
+    // little plane inside the hangar (facing the door / east)
+    stampPlane(36, Y + 1, 63, 1);
+
+    // big airliner on the apron, pointing down the runway (+Z)
+    stampPlane(84, Y + 1, 58, 0);
+
+    function stampPlane(cx, by, cz, east) {
+      // east=1: fuselage along +X; east=0: fuselage along +Z
+      function p(dx, dy, dz, b) {
+        if (east) put(cx + dz, by + dy, cz + dx, b);
+        else put(cx + dx, by + dy, cz + dz, b);
+      }
+      var k, s;
+      // fuselage 13 long, 3 wide, 3 tall
+      for (k = 0; k <= 12; k++) {
+        for (s = -1; s <= 1; s++) {
+          p(s, 0, k, B.WOOL);
+          p(s, 1, k, B.WOOL);
+          p(s, 2, k, k > 1 && k < 11 && s !== 0 ? B.GLASS : B.WOOL);
+        }
+      }
+      // nose
+      p(0, 1, 13, B.WOOL);
+      p(0, 2, 13, B.GLASS);
+      p(-1, 1, 13, B.GLASS);
+      p(1, 1, 13, B.GLASS);
+      // wings
+      for (s = -6; s <= 6; s++) {
+        p(s, 1, 6, B.PAINT_YELLOW);
+        p(s, 1, 7, B.PAINT_YELLOW);
+        p(s, 0, 6, B.PAINT_YELLOW);
+      }
+      // engines under wings
+      p(-4, 0, 6, B.STONE);
+      p(4, 0, 6, B.STONE);
+      p(-4, 0, 7, B.STONE);
+      p(4, 0, 7, B.STONE);
+      // tail
+      p(0, 3, 0, B.PAINT_YELLOW);
+      p(0, 4, 0, B.PAINT_YELLOW);
+      p(0, 5, 0, B.PAINT_YELLOW);
+      p(-2, 2, 0, B.PAINT_YELLOW);
+      p(-1, 2, 0, B.PAINT_YELLOW);
+      p(1, 2, 0, B.PAINT_YELLOW);
+      p(2, 2, 0, B.PAINT_YELLOW);
     }
   }
 

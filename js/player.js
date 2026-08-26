@@ -18,11 +18,12 @@ var Player = (function () {
 
   function init(cam) { camera = cam; }
 
-  function spawnAt(x, z) {
+  function spawnAt(x, z, facingYaw) {
     var y = World.surfaceY(x, z) + 1;
     pos.set(x + 0.5, y + 0.05, z + 0.5);
     vel.set(0, 0, 0);
-    yaw = Math.PI * 0.25; pitch = -0.1;
+    yaw = facingYaw !== undefined ? facingYaw : Math.PI * 0.25;
+    pitch = -0.1;
   }
 
   function look(dx, dy) {
