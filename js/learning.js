@@ -3,11 +3,11 @@
    LEARNING ENGINE
    A small pluggable system. Modules register themselves and the
    game asks the engine for challenges at gameplay moments
-   ("kind" describes the moment: pick / spell / sentence).
-   Reading (Spencer), spelling (Penelope), and Latin (Olivia)
-   modules exist; a future math module would register the same
-   way, and each player profile in CONFIG.PLAYERS names the
-   module it uses.
+   ("kind" describes the moment: pick / spell / sentence / picture).
+   Reading (Spencer: hear-and-tap + picture-to-word, never spelling),
+   spelling (Penelope), and Latin (Olivia) modules exist; a future
+   math module would register the same way, and each player profile
+   in CONFIG.PLAYERS names the module it uses.
 
    The engine also owns adaptive difficulty:
    - tierScore rises on clean wins, falls on misses
@@ -25,7 +25,10 @@ var Learning = (function () {
     return CONFIG.ACTIVE ? modules[CONFIG.ACTIVE.module] : null;
   }
 
-  // kind: "pick" (hear & find), "spell" (build the word), "sentence"
+  // kind: "pick" (hear & find), "spell" (build the word),
+  //       "sentence" (read & match), "picture" (big picture → word)
+  // The reading module remaps "spell" to pick/picture — Spencer never
+  // builds words from letter tiles.
   // opts.boost: raise difficulty by N tiers (Daddy's super challenges)
   function getChallenge(kind, opts) {
     var mod = activeModule();
@@ -135,15 +138,54 @@ var Learning = (function () {
     return a;
   }
 
+  function pictureChallenge(tierIdx, boost) {
+    var pictured = wordsOf(tierIdx, function (w) { return w.emoji; });
+    if (!pictured.length) pictured = wordsOf(0, function (w) { return w.emoji; });
+    var target = chooseTarget(pictured);
+    var all = wordsOf(tierIdx);
+    var nChoices = (tierIdx >= 2 || boost) ? 4 : 3;
+    var decoyWords = sample(all, nChoices - 1, [target]).map(function (w) { return w.word; });
+    return {
+      moduleId: "reading", kind: "picture", tier: tierIdx,
+      word: target.word, emoji: target.emoji, answer: target.word,
+      choices: shuffled([target.word].concat(decoyWords)),
+      subtitle: "Tap the word that matches the picture!",
+      skill: "picture"
+    };
+  }
+
+  function pickChallenge(tierIdx, boost) {
+    var all = wordsOf(tierIdx);
+    var target = chooseTarget(all);
+    var nChoices = (tierIdx >= 2 || boost) ? 4 : 3;
+    var decoyWords = sample(all, nChoices - 1, [target]).map(function (w) { return w.word; });
+    return {
+      moduleId: "reading", kind: "pick", tier: tierIdx,
+      word: target.word, emoji: target.emoji,
+      choices: shuffled([target.word].concat(decoyWords)),
+      skill: target.sight ? "sight" : "phonics"
+    };
+  }
+
   function getChallenge(kind, opts) {
     var boost = (opts && opts.boost) || 0;
     var tierIdx = pickTierIndex(boost);
     var tier = CURRICULUM.TIERS[tierIdx];
 
-    // a slice of word-ore moments become read-the-sentence instead
-    if (kind === "pick" && !boost && Math.random() < 0.25 && tier.sentences.length) {
-      kind = "sentence";
+    // Spencer reads. Chests, crafting, and parent quizzes still ASK for
+    // "spell", but we turn those into picture-to-word (or hear-and-tap).
+    if (kind === "spell") {
+      kind = Math.random() < 0.55 ? "picture" : "pick";
     }
+
+    // Word ore: mix hear-and-tap, big-picture matching, and sentences.
+    if (kind === "pick" && !boost) {
+      var roll = Math.random();
+      if (roll < 0.32) kind = "picture";
+      else if (roll < 0.55 && tier.sentences.length) kind = "sentence";
+    }
+
+    if (kind === "picture") return pictureChallenge(tierIdx, boost);
 
     if (kind === "sentence") {
       var s = tier.sentences[Math.floor(Math.random() * tier.sentences.length)];
@@ -154,38 +196,7 @@ var Learning = (function () {
       };
     }
 
-    if (kind === "spell") {
-      var spellables = wordsOf(tierIdx, function (w) { return w.spell; });
-      if (!spellables.length) spellables = wordsOf(0, function (w) { return w.spell; });
-      var target = chooseTarget(spellables);
-      var word = target.word.toLowerCase();
-      var letters = word.split("");
-      var alphabet = "abcdefghijklmnopqrstuvwxyz";
-      var decoys = [];
-      var nDecoys = Math.min(2 + tierIdx, 4);
-      while (decoys.length < nDecoys) {
-        var ch = alphabet[Math.floor(Math.random() * 26)];
-        if (letters.indexOf(ch) < 0 && decoys.indexOf(ch) < 0) decoys.push(ch);
-      }
-      return {
-        moduleId: "reading", kind: "spell", tier: tierIdx,
-        word: word, emoji: target.emoji,
-        tiles: shuffled(letters.concat(decoys)),
-        skill: target.sight ? "sight" : "phonics"
-      };
-    }
-
-    // default: "pick" — hear the word, find it
-    var all = wordsOf(tierIdx);
-    var target2 = chooseTarget(all);
-    var nChoices = (tierIdx >= 2 || boost) ? 4 : 3;
-    var decoyWords = sample(all, nChoices - 1, [target2]).map(function (w) { return w.word; });
-    return {
-      moduleId: "reading", kind: "pick", tier: tierIdx,
-      word: target2.word, emoji: target2.emoji,
-      choices: shuffled([target2.word].concat(decoyWords)),
-      skill: target2.sight ? "sight" : "phonics"
-    };
+    return pickChallenge(tierIdx, boost);
   }
 
   // result: { correct: bool, mistakes: int }
