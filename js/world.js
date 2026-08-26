@@ -113,7 +113,7 @@ var WORLD_DEFS = [
   { id: "airport",  name: "Sky Harbor",       emoji: "✈️", level: 1, needTool: "wings",
     sky: 0x6eb5e8, fog: 0xc5e4f5,
     surface: B.GRASS, under: B.DIRT, base: 14, amp: 2.2, water: 10, trees: 0.005, flowers: 0.02, cactus: 0, mush: 0, crystal: 0, leaves: B.LEAVES,
-    spawn: { x: 98, z: 62, yaw: Math.PI / 2 } }
+    spawn: { x: 64, z: 30, yaw: Math.PI } }
 ];
 
 /* ---------------- the world ---------------- */
