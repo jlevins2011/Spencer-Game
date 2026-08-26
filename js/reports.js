@@ -68,7 +68,16 @@ var Reports = (function () {
   function struggleWords(limit) {
     var ws = Save.data.stats.wordStats;
     return Object.keys(ws)
-      .filter(function (w) { return ws[w].miss > 0 && ws[w].miss >= ws[w].win; })
+      .filter(function (w) {
+        var s = ws[w];
+        if (s.bySkill && Object.keys(s.bySkill).length) {
+          return Object.keys(s.bySkill).some(function (k) {
+            var b = s.bySkill[k];
+            return b.miss > 0 && b.miss >= b.win;
+          });
+        }
+        return s.miss > 0 && s.miss >= s.win;
+      })
       .sort(function (a, b) { return ws[b].miss - ws[a].miss; })
       .slice(0, limit || 6);
   }
@@ -84,8 +93,11 @@ var Reports = (function () {
   var SKILL_LABELS = {
     sight: "Sight words (recognize on sight)",
     phonics: "Phonics (sounding out)",
+    hear: "Hearing a word and tapping it (auditory recognition)",
+    read: "Reading a word independently (no audio)",
     sentences: "Sentence reading",
-    picture: "Matching words to pictures",
+    picture: "Matching a picture to the written word (meaning)",
+    speak: "Saying a written word out loud (experimental)",
     spot: "Spotting correct spellings",
     spelling: "Spelling words out",
     "latin-vocab": "Latin vocabulary (Kraken Latin 1)",
