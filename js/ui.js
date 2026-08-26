@@ -128,6 +128,7 @@ var UI = (function () {
     var toolsHtml = "<div class='inv-tools'>" +
       "<span class='inv-tool'>⛏️ " + pickNames[p.pickTier] + "</span>" +
       (p.tools.drill ? "<span class='inv-tool legendary'>🌀 Voidbreaker Drill</span>" : "") +
+      (p.tools.wings ? "<span class='inv-tool legendary'>✈️ Pilot Wings</span>" : "") +
       (p.tools.thunder ? "<span class='inv-tool legendary'>⚡ Thunder Pick</span>" : "") +
       (p.tools.furnace ? "<button class='inv-tool legendary inv-station'>🔥 Magic Furnace</button>" : "") +
       (p.tools.lantern ? "<button class='inv-tool legendary inv-station'>🕯️ Lantern Kit</button>" : "") +
@@ -495,6 +496,8 @@ var UI = (function () {
   var TOOLS = [
     { key: "drill", name: "VOIDBREAKER DRILL", icon: "🌀", wins: 3,
       desc: "It can smash BEDROCK! Dig below the world into the DEEP DARK, where amethyst and mythril hide!" },
+    { key: "wings", name: "PILOT WINGS", icon: "✈️", wins: 5, world: "airport",
+      desc: "Cleared to fly! Daddy unlocked SKY HARBOR — a real airport with a runway, control tower, hangar, and airplanes. Pause and tap TRAVEL to go anytime, or talk to Daddy for a ride!" },
     { key: "thunder", name: "THUNDER PICK", icon: "⚡", wins: 8,
       desc: "It mines everything TWICE as fast! CRACKA-BOOM!" }
   ];
@@ -510,10 +513,10 @@ var UI = (function () {
   function showToolUnlock(tool) {
     var html =
       "<div class='levelup-burst'>" + tool.icon + "</div>" +
-      "<div class='ch-title big'>LEGENDARY TOOL!</div>" +
+      "<div class='ch-title big'>" + (tool.world ? "YOU'RE CLEARED TO FLY!" : "LEGENDARY TOOL!") + "</div>" +
       "<div class='rank-name'>" + tool.icon + " " + tool.name + "</div>" +
       "<div class='unlock-list'><div class='unlock-item'>" + tool.desc + "</div></div>" +
-      "<button class='big-btn' id='tool-ok'>WHOA!</button>";
+      "<button class='big-btn' id='tool-ok'>" + (tool.world ? "✈️ LET'S FLY!" : "WHOA!") + "</button>";
     openOverlay(html);
     GameAudio.sfx.levelup();
     GameAudio.say("You earned the " + tool.name + "! " + tool.desc);
@@ -521,6 +524,7 @@ var UI = (function () {
     $("tool-ok").addEventListener("pointerdown", function () {
       closeOverlay();
       updateHotbar();
+      if (tool.world) Game.travelTo(tool.world);
     });
   }
 
@@ -532,15 +536,32 @@ var UI = (function () {
       "Ouch, my leg! Good thing challenges don't need two feet!",
       "I can't run with this boot on... but I CAN quiz you!"
     ];
+    if (tool && tool.key === "wings") {
+      greetings = [
+        "I used to fly airplanes! A few more quizzes and I'll take you to my airport!",
+        "Runway's waiting. Beat this challenge and you're one step closer to Sky Harbor!",
+        "Pilots earn their wings. Super challenges first, then we FLY!"
+      ];
+    } else if (Save.data.player.tools.wings) {
+      greetings = [
+        "Sky Harbor is yours! Pause and tap TRAVEL — or hop a ride with me!",
+        "Want to go flying? I've got a plane parked at the airport!",
+        "My leg's still in this boot, but I can still taxi you to Sky Harbor!"
+      ];
+    }
     var progress = tool
-      ? "Win " + (tool.wins - d.wins) + " more and I'll give you a MYSTERY TOOL! 🎁"
+      ? (tool.key === "wings"
+        ? "Win " + (tool.wins - d.wins) + " more and I'll give you PILOT WINGS! ✈️"
+        : "Win " + (tool.wins - d.wins) + " more and I'll give you a MYSTERY TOOL! 🎁")
       : "You have all my tools! But I still have gems... 💎";
+    var canFly = Save.data.player.tools.wings && Save.data.player.world !== "airport";
     var html =
       "<div class='npc-head daddy' style='--hair:" + CONFIG.DADDY.hair + "'></div>" +
       "<div class='ch-title'>Daddy</div>" +
       "<div class='sentence-text'>" + greetings[Math.floor(Math.random() * greetings.length)] +
       " Ready for a SUPER CHALLENGE, " + CONFIG.PLAYER_NAME + "?<br><br>" + progress + "</div>" +
       "<button class='big-btn' id='dad-go'>🔥 SUPER CHALLENGE!</button>" +
+      (canFly ? "<button class='big-btn' id='dad-fly'>✈️ FLY TO SKY HARBOR</button>" : "") +
       "<button class='ghost-btn' id='dad-later'>Maybe later</button>";
     openOverlay(html);
     GameAudio.sfx.quest();
@@ -564,12 +585,19 @@ var UI = (function () {
             return;
           }
           UI.toast(t
-            ? "🔥 Super win! " + (t.wins - d.wins) + " more for Daddy's mystery tool!"
+            ? (t.key === "wings"
+              ? "🔥 Super win! " + (t.wins - d.wins) + " more for Pilot Wings!"
+              : "🔥 Super win! " + (t.wins - d.wins) + " more for Daddy's mystery tool!")
             : "🔥 Super win! +3 gems, +25 XP!", 3000);
         } else {
           UI.toast("💪 You got it! Perfect wins count toward Daddy's mystery tool!", 3000);
         }
       }, "🔥 DADDY'S SUPER CHALLENGE!");
+    });
+    var flyBtn = $("dad-fly");
+    if (flyBtn) flyBtn.addEventListener("pointerdown", function () {
+      closeOverlay();
+      Game.travelTo("airport");
     });
   }
 
@@ -747,7 +775,7 @@ var UI = (function () {
   function showLevelUp(newLevel) {
     var unlocks = [];
     WORLD_DEFS.forEach(function (w) {
-      if (w.level === newLevel) unlocks.push(w.emoji + " NEW WORLD: " + w.name + "!");
+      if (!w.needTool && w.level === newLevel) unlocks.push(w.emoji + " NEW WORLD: " + w.name + "!");
     });
     CRAFTS.forEach(function (c) {
       if (c.level === newLevel) unlocks.push("⛏️ You can now craft a " + c.name + "!");
@@ -797,16 +825,25 @@ var UI = (function () {
     });
   }
 
+  function worldLocked(w) {
+    if (w.needTool) return !Save.data.player.tools[w.needTool];
+    return Save.data.player.level < w.level;
+  }
+  function worldLockHint(w) {
+    if (w.needTool === "wings") return "Earn Pilot Wings from Daddy";
+    if (w.needTool) return "A special unlock";
+    return "Level " + w.level;
+  }
+
   function showWorlds() {
-    var level = Save.data.player.level;
     var html = "<div class='ch-title'>🌍 WORLDS</div><div class='world-list'>";
     WORLD_DEFS.forEach(function (w) {
-      var locked = level < w.level;
+      var locked = worldLocked(w);
       html += "<button class='world-card" + (locked ? " locked" : "") +
         (Save.data.player.world === w.id ? " current" : "") + "' data-world='" + w.id + "'>" +
         "<span class='world-emoji'>" + (locked ? "🔒" : w.emoji) + "</span>" +
         "<span class='world-name'>" + w.name + "</span>" +
-        "<span class='world-req'>" + (locked ? "Level " + w.level : (Save.data.player.world === w.id ? "You are here!" : "Tap to travel")) + "</span>" +
+        "<span class='world-req'>" + (locked ? worldLockHint(w) : (Save.data.player.world === w.id ? "You are here!" : "Tap to travel")) + "</span>" +
         "</button>";
     });
     html += "</div><button class='ghost-btn' id='wl-back'>⬅️ BACK</button>";
@@ -815,9 +852,9 @@ var UI = (function () {
       card.addEventListener("pointerdown", function () {
         var id = card.getAttribute("data-world");
         var def = WORLD_DEFS.find(function (w) { return w.id === id; });
-        if (Save.data.player.level < def.level) {
+        if (worldLocked(def)) {
           GameAudio.sfx.wrong();
-          toast("🔒 Reach level " + def.level + " to unlock " + def.name + "!");
+          toast("🔒 " + worldLockHint(def) + " to unlock " + def.name + "!");
           return;
         }
         closeOverlay();

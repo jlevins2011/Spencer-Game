@@ -71,8 +71,9 @@ var Game = (function () {
     var def = World.loadWorld(worldId);
     scene.background = new THREE.Color(def.sky);
     scene.fog = new THREE.Fog(def.fog, 70, 260);
-    var sx = Math.floor(World.SX / 2), sz = Math.floor(World.SZ / 2);
-    Player.spawnAt(sx, sz);
+    var sx = (def.spawn && def.spawn.x) || Math.floor(World.SX / 2);
+    var sz = (def.spawn && def.spawn.z) || Math.floor(World.SZ / 2);
+    Player.spawnAt(sx, sz, def.spawn && def.spawn.yaw);
     NPCs.placeAll(sx, sz);
     Animals.populate();
     rebuildTorchLights();

@@ -16,7 +16,7 @@ var Save = (function () {
         pickTier: 0,                 // 0 wood, 1 stone, 2 iron, 3 diamond
         world: "meadow",
         inventory: {},               // blockName -> count
-        tools: {}                    // Daddy: drill, thunder; Mommy: furnace, lantern
+        tools: {}                    // Daddy: drill, thunder, wings; Mommy: furnace, lantern
       },
       daddy: { wins: 0 },            // super-challenge wins
       mommy: { wins: 0 },
@@ -56,6 +56,11 @@ var Save = (function () {
           data.mommy = Object.assign(freshData().mommy, parsed.mommy || {});
           data.latin = Object.assign(freshData().latin, parsed.latin || {});
           if (!data.player.tools) data.player.tools = {};
+          // Pilot Wings / Sky Harbor was added after some kids already
+          // beat 5+ of Daddy's challenges — honor that progress.
+          if (data.daddy && data.daddy.wins >= 5 && !data.player.tools.wings) {
+            data.player.tools.wings = true;
+          }
         }
       }
     } catch (e) { /* corrupted save -> start fresh */ }
