@@ -225,15 +225,18 @@ html, body {
 }
 
 .picture-hero {
+  font-family: inherit;
   font-size: clamp(120px, 32vw, 188px);
   line-height: 1;
   width: min(240px, 72vw); height: min(240px, 72vw);
   margin: 6px auto 12px;
   display: flex; align-items: center; justify-content: center;
-  background: #fff;
+  background: #fff; color: inherit;
   border: 6px solid #c9b48a; border-radius: 20px;
   box-shadow: 0 8px 0 #b89a6a;
+  cursor: pointer; padding: 0;
 }
+.picture-hero:active { transform: translateY(4px); box-shadow: 0 4px 0 #b89a6a; }
 @media (max-height: 640px) {
   .picture-hero {
     font-size: 100px;

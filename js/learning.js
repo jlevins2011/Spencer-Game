@@ -149,7 +149,7 @@ var Learning = (function () {
       moduleId: "reading", kind: "picture", tier: tierIdx,
       word: target.word, emoji: target.emoji, answer: target.word,
       choices: shuffled([target.word].concat(decoyWords)),
-      subtitle: "Tap the word that matches the picture!",
+      subtitle: "Tap the picture or 🔊 to hear it, then tap the word!",
       skill: "picture"
     };
   }

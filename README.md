@@ -4,7 +4,7 @@ A Minecraft-style 3D world where the kids walk around, explore, mine, and build 
 and quietly get better at words while they do it.
 
 Three player profiles on the same page, each with its own save, difficulty, and weekly report:
-- **Spencer (7)** — reading only: hear a word and tap it, or match a big picture to the word (no spelling)
+- **Spencer (7)** — reading only: hear a word and tap it, or match a big picture to the word (tap the picture or 🔊 to hear it — no spelling)
 - **Penelope (10)** — spelling: standard 4th-5th grade lists, from "because" to "mischievous"
 - **Olivia (13)** — Latin: **Kraken Latin 1** (Natali H. Monnette / Canon Press), the 32-lesson logic-years syllabus
 
@@ -29,7 +29,7 @@ On a computer: WASD to move, drag the mouse to look, click to mine/place,
 SPACE to jump, B to toggle build mode.
 
 ### Where the learning hides
-- **❓ Word ore** (purple sparkly blocks) — Spencer: hear a word and tap it, or see a **big picture** and tap the matching word (sometimes a short sentence).
+- **❓ Word ore** (purple sparkly blocks) — Spencer: hear a word and tap it, or see a **big picture** and tap the matching word (tap the picture or 🔊 to hear it; sometimes a short sentence).
   Penelope: tap the correctly-spelled version among realistic misspellings.
   Olivia: hear the English, tap the Latin (Kraken Latin 1 vocabulary)
 - **🧰 Treasure chests** — Spencer: hear-and-tap or picture-to-word to pop the lock.

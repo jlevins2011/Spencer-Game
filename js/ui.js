@@ -321,9 +321,7 @@ var UI = (function () {
           GameAudio.sfx.wrong();
           b.classList.add("wrong");
           setTimeout(function () { b.classList.remove("wrong"); }, 500);
-          if (ch.kind !== "picture") {
-            setTimeout(function () { GameAudio.say(ch.speak || ch.word); }, 450);
-          }
+          setTimeout(function () { GameAudio.say(ch.speak || ch.word); }, 450);
         }
       });
       grid.appendChild(b);
@@ -348,12 +346,21 @@ var UI = (function () {
 
   /* ---------------- challenge: big picture → tap the word ---------------- */
   function showPicture(ch, onDone, introText) {
+    var spoken = ch.speak || ch.word;
     var html =
       "<div class='ch-title'>" + (introText || "What word is this?") + "</div>" +
-      "<div class='picture-hero'>" + (ch.emoji || "❓") + "</div>" +
-      "<div class='ch-sub'>" + (ch.subtitle || "Tap the word that matches the picture!") + "</div>" +
+      "<button type='button' class='picture-hero' id='ch-picture' aria-label='Hear the word'>" +
+        (ch.emoji || "❓") + "</button>" +
+      "<div class='ch-sub'>" + (ch.subtitle || "Tap the picture or 🔊 to hear it, then tap the word!") + "</div>" +
+      "<button class='speak-btn' id='ch-speak'>🔊</button>" +
       "<div class='word-grid' id='ch-grid'></div>";
     openOverlay(html);
+    function hear(e) {
+      if (e) e.stopPropagation();
+      GameAudio.say(spoken);
+    }
+    $("ch-picture").addEventListener("pointerdown", hear);
+    $("ch-speak").addEventListener("pointerdown", hear);
     fillWordChoices(ch, onDone, function () { return ch.answer || ch.word; }, function (word) {
       GameAudio.say(word);
     });
