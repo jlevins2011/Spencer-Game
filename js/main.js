@@ -143,7 +143,7 @@ var Game = (function () {
       return;
     }
 
-    // then animals (hunting!)
+    // then animals (hunting or shearing)
     var animalHits = npcRaycaster.intersectObjects(Animals.hitboxes(), false);
     if (animalHits.length && (!hit || animalHits[0].distance < hit.distance + 0.4)) {
       Animals.hit(animalHits[0].object.userData.animal, Player.position);
@@ -152,11 +152,55 @@ var Game = (function () {
 
     if (!hit) return;
 
-    if (mode === "build") { tryPlace(hit); return; }
+    var held = selectedItem || UI.selectedItem();
+    var lookB = World.getBlock(hit.block.x, hit.block.y, hit.block.z);
 
-    var b = World.getBlock(hit.block.x, hit.block.y, hit.block.z);
-    if (b === B.AIR) return;
-    var def = BLOCKS[b];
+    // empty bucket scoops water
+    if (held === "bucket" && lookB === B.WATER) {
+      var invb = Save.data.player.inventory;
+      if ((invb.bucket || 0) < 1) return;
+      invb.bucket -= 1;
+      invb["water bucket"] = (invb["water bucket"] || 0) + 1;
+      World.setBlock(hit.block.x, hit.block.y, hit.block.z, B.AIR);
+      Save.save();
+      GameAudio.sfx.place();
+      UI.toast("🪣 Scooped water! Tap somewhere to pour a pool.");
+      UI.updateHotbar();
+      selectedItem = "water bucket";
+      Game.selectedItem = "water bucket";
+      return;
+    }
+
+    // water bucket can pour in either mode
+    if (held === "water bucket") {
+      tryPlace(hit);
+      return;
+    }
+
+    var b = lookB;
+    var def = b && BLOCKS[b];
+
+    // doors, beds, and crafting tables always tap-to-use (even in build mode)
+    if (def && def.special === "workshop") {
+      UI.showWorkshop();
+      return;
+    }
+    if (def && def.special === "door") {
+      World.setBlock(hit.block.x, hit.block.y, hit.block.z, b === B.DOOR_OPEN ? B.DOOR : B.DOOR_OPEN);
+      GameAudio.sfx.place();
+      return;
+    }
+    if (def && def.special === "bed") {
+      Save.data.player.bed = { world: Save.data.player.world, x: hit.block.x, z: hit.block.z };
+      Save.save();
+      GameAudio.sfx.quest();
+      UI.toast("😴 Bed set! If you fall, you'll wake up here.", 3200);
+      GameAudio.say("Bed time!");
+      return;
+    }
+
+    if (mode === "build") { tryPlace(hit); return; }
+    if (b === B.AIR || !def) return;
 
     if (def.special === "wordore") {
       UI.showChallenge("pick", function (result) {
@@ -201,6 +245,12 @@ var Game = (function () {
       return;
     }
     var speed = PICK_SPEED[p.pickTier] * (p.tools.thunder ? 2 : 1);
+    var bid = def.id;
+    if (p.tools.shovel && (bid === B.DIRT || bid === B.GRASS || bid === B.SAND ||
+        bid === B.SNOW || bid === B.CRYSTAL_GRASS)) speed *= 2.4;
+    else if (p.tools.axe && (bid === B.LOG || bid === B.LEAVES || bid === B.LEAVES_PINK ||
+        bid === B.PLANKS || bid === B.FENCE || bid === B.DOOR || bid === B.DOOR_OPEN ||
+        bid === B.CHEST || bid === B.CACTUS)) speed *= 2.4;
     var ms = Math.max(120, def.hard / speed);
     mining = {
       x: hit.block.x, y: hit.block.y, z: hit.block.z,
@@ -257,6 +307,11 @@ var Game = (function () {
     }
     World.setBlock(t.x, t.y, t.z, blockId);
     inv[item] -= 1;
+    if (item === "water bucket") {
+      inv.bucket = (inv.bucket || 0) + 1;
+      selectedItem = (inv.bucket > 0) ? "bucket" : null;
+      Game.selectedItem = selectedItem;
+    }
     Save.save();
     Stats.recordPlace();
     GameAudio.sfx.place();

@@ -15,7 +15,8 @@ var B = {
   CRYSTAL_GRASS: 26, LEAVES_PINK: 27, BRICK: 28,
   DEEPSLATE: 29, AMETHYST: 30, MYTHRIL: 31, VOIDROCK: 32, WOOL: 33,
   GLASS: 34, TORCH: 35,
-  ASPHALT: 36, CONCRETE: 37, PAINT_YELLOW: 38, PAINT_WHITE: 39
+  ASPHALT: 36, CONCRETE: 37, PAINT_YELLOW: 38, PAINT_WHITE: 39,
+  DOOR: 40, DOOR_OPEN: 41, LADDER: 42, FENCE: 43, BED: 44, WOOL_RED: 45, CRAFT_TABLE: 46
 };
 
 var BLOCKS = (function () {
@@ -59,6 +60,13 @@ var BLOCKS = (function () {
   def(B.CONCRETE, "concrete", { tiles: { top: T.CONCRETE, bottom: T.CONCRETE, side: T.CONCRETE }, drop: "concrete", hard: 550, icon: "⬜" });
   def(B.PAINT_YELLOW, "yellow paint", { tiles: { top: T.PAINT_YELLOW, bottom: T.PAINT_YELLOW, side: T.PAINT_YELLOW }, drop: "yellow paint", hard: 200, icon: "🟨" });
   def(B.PAINT_WHITE, "white paint", { tiles: { top: T.PAINT_WHITE, bottom: T.PAINT_WHITE, side: T.PAINT_WHITE }, drop: "white paint", hard: 200, icon: "⬜" });
+  def(B.DOOR,      "door",    { tiles: { top: T.DOOR, bottom: T.DOOR, side: T.DOOR }, drop: "door", hard: 350, icon: "🚪", special: "door" });
+  def(B.DOOR_OPEN, "door",    { tiles: { top: T.DOOR, bottom: T.DOOR, side: T.DOOR }, drop: "door", hard: 350, icon: "🚪", special: "door", solid: false, opaque: false });
+  def(B.LADDER,    "ladder",  { tiles: { top: T.LADDER }, cross: true, solid: false, drop: "ladder", hard: 80, icon: "🪜" });
+  def(B.FENCE,     "fence",   { tiles: { top: T.FENCE, bottom: T.FENCE, side: T.FENCE }, drop: "fence", hard: 300, icon: "🪵", opaque: false });
+  def(B.BED,       "bed",     { tiles: { top: T.BED, bottom: T.PLANKS, side: T.BED }, drop: "bed", hard: 280, icon: "🛏️", special: "bed" });
+  def(B.WOOL_RED,  "red wool",{ tiles: { top: T.WOOL_RED, bottom: T.WOOL_RED, side: T.WOOL_RED }, drop: "red wool", hard: 250, icon: "🟥" });
+  def(B.CRAFT_TABLE, "crafting table", { tiles: { top: T.CRAFT_TOP, bottom: T.PLANKS, side: T.CRAFT_SIDE }, drop: "crafting table", hard: 350, icon: "🪚", special: "workshop" });
   def(B.CACTUS,   "cactus",   { tiles: { top: T.CACTUS_TOP, bottom: T.CACTUS_TOP, side: T.CACTUS_SIDE }, drop: "cactus", hard: 250, icon: "🌵" });
   def(B.MUSH_STEM,"mushroom stem", { tiles: { top: T.MUSH_STEM, bottom: T.MUSH_STEM, side: T.MUSH_STEM }, drop: "mushroom", hard: 300, icon: "🍄" });
   def(B.MUSH_CAP, "mushroom cap",  { tiles: { top: T.MUSH_CAP, bottom: T.MUSH_STEM, side: T.MUSH_CAP }, drop: "mushroom", hard: 300, icon: "🍄" });
@@ -85,7 +93,9 @@ var ITEM_TO_BLOCK = {
   deepslate: B.DEEPSLATE, amethyst: B.AMETHYST, mythril: B.MYTHRIL,
   wool: B.WOOL, "iron ore": B.IRON, glass: B.GLASS, torch: B.TORCH,
   asphalt: B.ASPHALT, concrete: B.CONCRETE,
-  "yellow paint": B.PAINT_YELLOW, "white paint": B.PAINT_WHITE
+  "yellow paint": B.PAINT_YELLOW, "white paint": B.PAINT_WHITE,
+  door: B.DOOR, ladder: B.LADDER, fence: B.FENCE, bed: B.BED, "red wool": B.WOOL_RED,
+  "water bucket": B.WATER, "crafting table": B.CRAFT_TABLE
 };
 var ITEM_ICON = {
   dirt: "🟫", stone: "🪨", sand: "🟨", wood: "🪵", leaves: "🍃", planks: "🟧",
@@ -95,7 +105,9 @@ var ITEM_ICON = {
   deepslate: "⬛", amethyst: "🟣", mythril: "🌀",
   wool: "🧶", meat: "🍖", "iron ore": "⛓️", glass: "🪟", torch: "🕯️",
   "cooked meat": "🍗",
-  asphalt: "⬛", concrete: "⬜", "yellow paint": "🟨", "white paint": "⬜"
+  asphalt: "⬛", concrete: "⬜", "yellow paint": "🟨", "white paint": "⬜",
+  sticks: "🥢", door: "🚪", ladder: "🪜", fence: "🚧", bed: "🛏️",
+  "red wool": "🟥", bucket: "🪣", "water bucket": "💧", "crafting table": "🪚"
 };
 
 /* ---------------- world definitions ---------------- */
@@ -372,7 +384,7 @@ var World = (function () {
     // roof
     box(tx0 - 1, Y + 6, tz0 - 1, tx1 + 1, Y + 6, tz1 + 1, B.CONCRETE);
     // doors onto the apron (south) and toward the runway (west)
-    put(100, Y + 1, tz0, B.AIR);
+    put(100, Y + 1, tz0, B.DOOR);
     put(100, Y + 2, tz0, B.AIR);
     put(101, Y + 1, tz0, B.AIR);
     put(101, Y + 2, tz0, B.AIR);
@@ -384,8 +396,12 @@ var World = (function () {
     // ---- CONTROL TOWER ----
     var twx = 96, twz = 72;
     box(twx, Y + 1, twz, twx + 3, Y + 12, twz + 3, B.BRICK);
-    box(twx + 1, Y + 1, twz + 1, twx + 2, Y + 11, twz + 2, B.AIR); // stairwell
+    box(twx + 1, Y + 1, twz + 1, twx + 2, Y + 12, twz + 2, B.AIR); // stairwell
+    put(twx + 1, Y + 1, twz, B.DOOR);                             // door in
+    put(twx + 1, Y + 2, twz, B.AIR);
+    for (var ly = Y + 1; ly <= Y + 12; ly++) put(twx + 1, ly, twz + 1, B.LADDER);
     box(twx, Y + 13, twz, twx + 3, Y + 15, twz + 3, B.GLASS);
+    put(twx + 1, Y + 13, twz + 1, B.AIR);                         // hatch into the cab
     put(twx + 1, Y + 16, twz + 1, B.GLOW);
     put(twx + 2, Y + 16, twz + 2, B.GLOW);
     box(twx, Y + 16, twz, twx + 3, Y + 16, twz + 3, B.CONCRETE);
@@ -633,9 +649,13 @@ var World = (function () {
     return getBlock(Math.floor(x), Math.floor(y), Math.floor(z)) === B.WATER;
   }
 
+  function isLadderAt(x, y, z) {
+    return getBlock(Math.floor(x), Math.floor(y), Math.floor(z)) === B.LADDER;
+  }
+
   return {
     init: init, loadWorld: loadWorld, getBlock: getBlock, setBlock: setBlock,
-    surfaceY: surfaceY, isSolid: isSolid, isWaterAt: isWaterAt,
+    surfaceY: surfaceY, isSolid: isSolid, isWaterAt: isWaterAt, isLadderAt: isLadderAt,
     get meshes() { return chunkMeshes; },
     get def() { return currentDef; },
     SX: SX, SY: SY, SZ: SZ, MIN_Y: MIN_Y

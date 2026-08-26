@@ -115,7 +115,7 @@ html, body {
   top: 22%; left: 50%; transform: translateX(-50%) scale(.9);
   background: rgba(0,0,0,.65); color: #fff; font-size: 11px; line-height: 1.6;
   padding: 12px 18px; border-radius: 10px; max-width: 84vw; text-align: center;
-  opacity: 0; transition: all .25s; pointer-events: none; z-index: 40;
+  opacity: 0; transition: all .25s; pointer-events: none; z-index: 80;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
 

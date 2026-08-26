@@ -16,7 +16,8 @@ var Save = (function () {
         pickTier: 0,                 // 0 wood, 1 stone, 2 iron, 3 diamond
         world: "meadow",
         inventory: {},               // blockName -> count
-        tools: {}                    // Daddy: drill, thunder, wings; Mommy: furnace, lantern
+        tools: {}                    // Daddy, Mommy, plus shovel/axe/shears
+        // bed: { world, x, z } set when they sleep in a crafted bed
       },
       daddy: { wins: 0 },            // super-challenge wins
       mommy: { wins: 0 },

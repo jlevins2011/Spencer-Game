@@ -35,6 +35,8 @@ SPACE to jump, B to toggle build mode.
 - **🧰 Treasure chests** — Spencer: hear-and-tap or picture-to-word to pop the lock.
   Penelope and Olivia: build the word from letter tiles.
 - **⛏️ Crafting pickaxe upgrades** — Spencer reads (hear-and-tap or a picture); Penelope and Olivia spell to craft
+- **🔨 Workshop** — a **🔨 CRAFT!** button appears when you have the ingredients. Instant recipes (no quiz): wood → planks → sticks, then **doors**, **ladders**, **fences**, **beds**, **red wool**, and a **crafting table**. Place the table and tap it anytime to browse recipes. Tool recipes still use a word challenge: **shovel** (digs dirt/sand/snow fast), **axe** (chops wood fast), **shears** (snip sheep for wool — they keep hopping!), and pickaxe upgrades. **Buckets** (3 iron) scoop water and pour a pool somewhere else.
+- **🚪 Building extras** — tap a door to open/close it, tap a bed to set your spawn (falling into the void wakes you there), climb ladders, and peek through fences. Sky Harbor's control tower has a ladder up the stairwell.
 - **👧👦 Sibling quests** — each kid's siblings appear in-game with little quests
 - **🔥 Daddy's SUPER CHALLENGES** — Daddy is in the game too (red hair, glasses,
   and the hurt-leg boot). His challenges use harder words than the kid's
@@ -61,7 +63,8 @@ SPACE to jump, B to toggle build mode.
   building and for new sister quests. They repopulate over time.
 - **🎒 Inventory** — tap the bag button (or press E) to see everything:
   blocks, resources, gems, pickaxe, and legendary tools. Tap a block there
-  to start building with it.
+  to start building with it. The workshop also lists shovel, axe, and shears
+  once you've crafted them.
 - **⚡ WORD STORMS** — go 5 minutes without doing anything educational and a
   storm rolls in: a word challenge takes over the screen and must be answered
   (with a gem reward) before play continues. No coasting!
