@@ -465,6 +465,48 @@ var UI = (function () {
     });
   }
 
+  // Younger kids and early readers shouldn't have to decode a whole
+  // NPC speech bubble before they can play. Older kids still get 🔊.
+  function needsReadAloud() {
+    var p = CONFIG.ACTIVE;
+    if (!p) return false;
+    if (p.readAloud === true) return true;
+    if (p.readAloud === false) return false;
+    if ((p.age || 99) <= (CONFIG.READ_ALOUD_MAX_AGE || 8)) return true;
+    if (p.module === "reading") {
+      var tier = Learning.currentTier ? Learning.currentTier() : 0;
+      if (tier <= (CONFIG.READ_ALOUD_MAX_READING_TIER != null ? CONFIG.READ_ALOUD_MAX_READING_TIER : 1)) {
+        return true;
+      }
+      var bag = Save.data.stats && Save.data.stats.challenges;
+      var read = bag && bag.read;
+      if (read && read.tries >= 4 && (read.clean / read.tries) < 0.6) return true;
+    }
+    return false;
+  }
+
+  function stripForSpeech(s) {
+    return String(s || "")
+      .replace(/<br\s*\/?>/gi, ". ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&amp;/g, "and")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // Call from the same tap that opened the conversation (iPad TTS).
+  function speakDialogue(text, rate) {
+    if (!needsReadAloud()) return;
+    var spoken = stripForSpeech(text);
+    if (!spoken) return;
+    GameAudio.warm();
+    GameAudio.say(spoken, rate || 0.8);
+  }
+
+  function speakBtnLabel() {
+    return needsReadAloud() ? "🔊 Hear it again" : "🔊 Help me read it";
+  }
+
   function celebrate(el) {
     for (var i = 0; i < 14; i++) {
       var s = document.createElement("div");
@@ -855,17 +897,22 @@ var UI = (function () {
         ? "Win " + (tool.wins - d.wins) + " more and I'll give you PILOT WINGS! ✈️"
         : "Win " + (tool.wins - d.wins) + " more and I'll give you a MYSTERY TOOL! 🎁")
       : "You have all my tools! But I still have gems... 💎";
+    var greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    var spoken = greeting + " Ready for a SUPER CHALLENGE, " + CONFIG.PLAYER_NAME + "? " + progress;
     var canFly = Save.data.player.tools.wings && Save.data.player.world !== "airport";
     var html =
       "<div class='npc-head daddy' style='--hair:" + CONFIG.DADDY.hair + "'></div>" +
       "<div class='ch-title'>Daddy</div>" +
-      "<div class='sentence-text'>" + greetings[Math.floor(Math.random() * greetings.length)] +
+      "<div class='sentence-text'>" + greeting +
       " Ready for a SUPER CHALLENGE, " + CONFIG.PLAYER_NAME + "?<br><br>" + progress + "</div>" +
+      "<button type='button' class='speak-btn small' id='dlg-speak'>" + speakBtnLabel() + "</button>" +
       "<button class='big-btn' id='dad-go'>🔥 SUPER CHALLENGE!</button>" +
       (canFly ? "<button class='big-btn' id='dad-fly'>✈️ FLY TO SKY HARBOR</button>" : "") +
       "<button class='ghost-btn' id='dad-later'>Maybe later</button>";
     openOverlay(html);
     GameAudio.sfx.quest();
+    bindSpeak("dlg-speak", spoken, 0.8);
+    speakDialogue(spoken);
     $("dad-later").addEventListener("pointerdown", closeOverlay);
     $("dad-go").addEventListener("pointerdown", function () {
       var kind = Math.random() < 0.5 ? "spell" : "pick";
@@ -930,15 +977,20 @@ var UI = (function () {
     var progress = tool
       ? "Win " + (tool.wins - m.wins) + " more and I'll teach you a SECRET Minecraft trick! 🎁"
       : "You know all my tricks! But I still have gems... 💎";
+    var greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    var spoken = greeting + " Ready, " + CONFIG.PLAYER_NAME + "? " + progress;
     var html =
       "<div class='npc-head mommy' style='--hair:" + CONFIG.MOMMY.hair + "'><span class='tea-cup'>☕</span></div>" +
       "<div class='ch-title'>Mommy ☕</div>" +
-      "<div class='sentence-text'>" + greetings[Math.floor(Math.random() * greetings.length)] +
+      "<div class='sentence-text'>" + greeting +
       " Ready, " + CONFIG.PLAYER_NAME + "?<br><br>" + progress + "</div>" +
+      "<button type='button' class='speak-btn small' id='dlg-speak'>" + speakBtnLabel() + "</button>" +
       "<button class='big-btn' id='mom-go'>☕ SUPER CHALLENGE!</button>" +
       "<button class='ghost-btn' id='mom-later'>Maybe later</button>";
     openOverlay(html);
     GameAudio.sfx.quest();
+    bindSpeak("dlg-speak", spoken, 0.8);
+    speakDialogue(spoken);
     $("mom-later").addEventListener("pointerdown", closeOverlay);
     $("mom-go").addEventListener("pointerdown", function () {
       var kind = Math.random() < 0.5 ? "spell" : "pick";
@@ -991,14 +1043,17 @@ var UI = (function () {
 
     if (q && q.sister === name && Quests.isComplete()) {
       // turn in!
+      var doneLine = "You did it! Thank you, " + CONFIG.PLAYER_NAME + "!";
       var doneHtml =
         "<div class='npc-head' style='--hair:" + npc.def.hair + ";--shirt:" + npc.def.shirt + "'></div>" +
         "<div class='ch-title'>" + name + "</div>" +
-        "<div class='sentence-text'>You did it! Thank you, " + CONFIG.PLAYER_NAME + "! 🎉</div>" +
+        "<div class='sentence-text'>" + doneLine + " 🎉</div>" +
+        "<button type='button' class='speak-btn small' id='dlg-speak'>" + speakBtnLabel() + "</button>" +
         "<button class='big-btn' id='dlg-done'>💎 GET REWARD</button>";
       openOverlay(doneHtml);
       GameAudio.sfx.quest();
-      GameAudio.say("You did it! Thank you " + CONFIG.PLAYER_NAME + "!");
+      bindSpeak("dlg-speak", doneLine, 0.8);
+      GameAudio.say(doneLine);
       $("dlg-done").addEventListener("pointerdown", function () {
         Quests.finish();
         celebrate($("overlay-card"));
@@ -1009,30 +1064,30 @@ var UI = (function () {
 
     if (q) {
       // remind about the active quest
-      var who = q.sister === name ? "I" : q.sister;
+      var remindLine = q.sister === name ? q.text : "Go help " + q.sister + " first!";
       var remindHtml =
         "<div class='npc-head' style='--hair:" + npc.def.hair + ";--shirt:" + npc.def.shirt + "'></div>" +
         "<div class='ch-title'>" + name + "</div>" +
-        "<div class='sentence-text'>" + (q.sister === name ? q.text : "Go help " + q.sister + " first! " + q.icon) + "</div>" +
-        "<button type='button' class='speak-btn small' id='dlg-speak'>🔊</button>" +
+        "<div class='sentence-text'>" + remindLine + (q.sister === name ? "" : " " + q.icon) + "</div>" +
+        "<button type='button' class='speak-btn small' id='dlg-speak'>" + speakBtnLabel() + "</button>" +
         "<button class='big-btn' id='dlg-ok'>OK!</button>";
       openOverlay(remindHtml);
-      bindSpeak("dlg-speak", function () {
-        return q.sister === name ? q.text : "Go help " + q.sister + " first!";
-      }, 0.8);
+      bindSpeak("dlg-speak", remindLine, 0.8);
+      speakDialogue(remindLine);
       $("dlg-ok").addEventListener("pointerdown", closeOverlay);
       return;
     }
 
-    // offer a new quest — Spencer reads the request, then a quick
-    // "what do I need?" comprehension check locks it in.
+    // offer a new quest — younger kids hear it read aloud; they still
+    // tap the picture so we're checking that they understood.
     var quest = Quests.pickQuest();
     var choices = [quest.icon].concat(quest.decoys).sort(function () { return Math.random() - 0.5; });
+    var spoken = "Hi " + CONFIG.PLAYER_NAME + "! " + quest.text;
     var html =
       "<div class='npc-head' style='--hair:" + npc.def.hair + ";--shirt:" + npc.def.shirt + "'></div>" +
       "<div class='ch-title'>" + name + "</div>" +
-      "<div class='sentence-text'>Hi " + CONFIG.PLAYER_NAME + "! " + quest.text + "</div>" +
-      "<button type='button' class='speak-btn small' id='dlg-speak'>🔊 Help me read it</button>" +
+      "<div class='sentence-text'>" + spoken + "</div>" +
+      "<button type='button' class='speak-btn small' id='dlg-speak'>" + speakBtnLabel() + "</button>" +
       "<div class='ch-sub'>What does " + name + " need?</div>" +
       "<div class='word-grid' id='dlg-grid'></div>" +
       "<button class='ghost-btn' id='dlg-later'>Maybe later</button>";
@@ -1068,7 +1123,8 @@ var UI = (function () {
       });
       grid.appendChild(b);
     });
-    bindSpeak("dlg-speak", quest.text, 0.8);
+    bindSpeak("dlg-speak", spoken, 0.8);
+    speakDialogue(spoken);
     $("dlg-later").addEventListener("pointerdown", closeOverlay);
   }
 
@@ -1276,6 +1332,6 @@ var UI = (function () {
     showInventory: showInventory, toggleInventory: toggleInventory,
     showLevelUp: showLevelUp, showPause: showPause, showHome: showHome, hideHome: hideHome,
     rankFor: rankFor, xpNeeded: xpNeeded, nextCraftInfo: nextCraftInfo, showWorkshop: showWorkshop,
-    closeOverlay: closeOverlay
+    closeOverlay: closeOverlay, needsReadAloud: needsReadAloud
   };
 })();

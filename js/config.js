@@ -8,7 +8,7 @@ var CONFIG = {
   // and weekly report. Their siblings appear as in-game helpers.
   PLAYERS: [
     {
-      id: "spencer", name: "Spencer", emoji: "⛏️",
+      id: "spencer", name: "Spencer", emoji: "⛏️", age: 7,
       module: "reading",                    // hear-and-tap, picture-to-word, independent read (no spelling)
       saveKey: "spencercraft_save_v2",      // original key: keeps his progress
       startLevel: 1,
@@ -18,7 +18,7 @@ var CONFIG = {
       ]
     },
     {
-      id: "penelope", name: "Penelope", emoji: "✨",
+      id: "penelope", name: "Penelope", emoji: "✨", age: 10,
       module: "spelling",                   // learns: spelling (age 10)
       saveKey: "craftworlds_save_penelope",
       startLevel: 3,                        // 10yo: skip the baby ramp
@@ -28,7 +28,7 @@ var CONFIG = {
       ]
     },
     {
-      id: "olivia", name: "Olivia", emoji: "🦑",
+      id: "olivia", name: "Olivia", emoji: "🦑", age: 13,
       module: "latin",                      // learns: Kraken Latin 1 (age 13)
       saveKey: "craftworlds_save_olivia",
       startLevel: 5,                        // strong reader: skip the baby worlds
@@ -80,6 +80,12 @@ var CONFIG = {
   // struggle points before difficulty backs off a tier
   // (a rough challenge = 1 point, a really rough one = 2; a perfect win clears them)
   BACK_OFF_AT: 5,
+
+  // Conversations (sisters, Daddy, Mommy) auto-read for younger kids
+  // and for early reading tiers. Older strong readers still get a 🔊.
+  // Set a profile's readAloud: true/false to force either way.
+  READ_ALOUD_MAX_AGE: 8,
+  READ_ALOUD_MAX_READING_TIER: 1,
 
   // If a kid goes this long without doing anything educational,
   // a WORD STORM rolls in and must be answered to keep playing.

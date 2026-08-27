@@ -37,7 +37,7 @@ SPACE to jump, B to toggle build mode.
 - **⛏️ Crafting pickaxe upgrades** — Spencer reads (hear-and-tap, a picture, or independent reading); Penelope and Olivia spell to craft
 - **🔨 Workshop** — a **🔨 CRAFT!** button appears when you have the ingredients. Instant recipes (no quiz): wood → planks → sticks, then **doors**, **ladders**, **fences**, **beds**, **red wool**, and a **crafting table**. Place the table and tap it anytime to browse recipes. Tool recipes still use a word challenge: **shovel** (digs dirt/sand/snow fast), **axe** (chops wood fast), **shears** (snip sheep for wool — they keep hopping!), and pickaxe upgrades. **Buckets** (3 iron) scoop water and pour a pool somewhere else.
 - **🚪 Building extras** — tap a door to open/close it, tap a bed to set your spawn (falling into the void wakes you there), climb ladders, and peek through fences. Sky Harbor's control tower has a ladder up the stairwell.
-- **👧👦 Sibling quests** — each kid's siblings appear in-game with little quests
+- **👧👦 Sibling quests** — each kid's siblings appear in-game with little quests. Younger kids (and early readers) hear the conversation read aloud automatically; older kids can tap 🔊 if they want help.
 - **🔥 Daddy's SUPER CHALLENGES** — Daddy is in the game too (red hair, glasses,
   and the hurt-leg boot). His challenges use harder words than the kid's
   current level. 3 perfect-ish wins earn the **Voidbreaker Drill** (breaks
@@ -107,7 +107,7 @@ Notes:
 
 ## For tweakers
 
-- `js/config.js` — player profiles, helpers, difficulty pacing, report settings
+- `js/config.js` — player profiles (`age` / `readAloud` control whether conversations auto-read), helpers, difficulty pacing, report settings
 - `js/curriculum.js` — Spencer's reading words, sentences, and the quests
 - `js/spelling.js` — Penelope's spelling lists (swap in school lists here!)
 - `js/latin.js` — Olivia's Kraken Latin 1 vocabulary (units 1–4)
