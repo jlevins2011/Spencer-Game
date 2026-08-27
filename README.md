@@ -21,7 +21,7 @@ so it launches full-screen like an app.
 - **Left thumb** — touch and drag anywhere on the left side to walk
 - **Right thumb** — drag to look around
 - **Tap a block** — mine it (⬆️ button jumps)
-- **⛏️/🧱 button** — switch between mine mode and build mode
+- **⛏️/🧱 button** — switch between mine mode and build mode (shows 🎯 when the Nerf gun is out — tap it to put the gun away)
 - **Tap a bag item** — select a block, then tap the world to place it
 - **Tap Olivia, Penelope, Daddy, or Mommy** — quests and super challenges!
 
@@ -35,7 +35,7 @@ SPACE to jump, B to toggle build mode.
 - **🧰 Treasure chests** — Spencer: hear-and-tap, picture-to-word, or independent read-the-word.
   Penelope and Olivia: build the word from letter tiles.
 - **⛏️ Crafting pickaxe upgrades** — Spencer reads (hear-and-tap, a picture, or independent reading); Penelope and Olivia spell to craft
-- **🔨 Workshop** — a **🔨 CRAFT!** button appears when you have the ingredients. Instant recipes (no quiz): wood → planks → sticks, then **doors**, **ladders**, **fences**, **beds**, **red wool**, and a **crafting table**. Place the table and tap it anytime to browse recipes. Tool recipes still use a word challenge: **shovel** (digs dirt/sand/snow fast), **axe** (chops wood fast), **shears** (snip sheep for wool — they keep hopping!), and pickaxe upgrades. **Buckets** (3 iron) scoop water and pour a pool somewhere else.
+- **🔨 Workshop** — a **🔨 CRAFT!** button appears when you have the ingredients. Instant recipes (no quiz): wood → planks → sticks, then **doors**, **ladders**, **fences**, **beds**, **red wool**, and a **crafting table**. Place the table and tap it anytime to browse recipes. Tool recipes still use a word challenge: **shovel** (digs dirt/sand/snow fast), **axe** (chops wood fast), **shears** (snip sheep for wool — they keep hopping!), **Nerf gun** (25-dart drum mag — foam darts stun animals and make people say “Ouch!”; nothing dies), and pickaxe upgrades. **Buckets** (3 iron) scoop water and pour a pool somewhere else.
 - **🚪 Building extras** — tap a door to open/close it, tap a bed to set your spawn (falling into the void wakes you there), climb ladders, and peek through fences. Sky Harbor's control tower has a ladder up the stairwell.
 - **👧👦 Sibling quests** — each kid's siblings appear in-game with little quests. Younger kids (and early readers) hear the conversation read aloud automatically; older kids can tap 🔊 if they want help.
 - **🔥 Daddy's SUPER CHALLENGES** — Daddy is in the game too (red hair, glasses,

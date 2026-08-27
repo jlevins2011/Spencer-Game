@@ -53,6 +53,7 @@ var Game = (function () {
     NPCs.init(scene);
     Animals.init(scene);
     Player.init(camera);
+    Nerf.init(scene, camera);
     Controls.init(renderer.domElement);
 
     window.addEventListener("resize", function () {
@@ -76,6 +77,7 @@ var Game = (function () {
     Player.spawnAt(sx, sz, def.spawn && def.spawn.yaw);
     NPCs.placeAll(sx, sz);
     Animals.populate();
+    Nerf.clearDarts();
     rebuildTorchLights();
     UI.toast(def.emoji + " Welcome to " + def.name + "!");
     GameAudio.say("Welcome to " + def.name + "!");
@@ -131,6 +133,12 @@ var Game = (function () {
 
   function interact() {
     if (!running || mining) return;
+
+    // Nerf gun: tap always fires a foam dart (never mines, never talks).
+    if (Nerf.isArmed()) {
+      Nerf.fire();
+      return;
+    }
 
     var hit = Player.raycastBlock(6);
 
@@ -414,12 +422,23 @@ var Game = (function () {
   }
 
   function setMode(m) {
+    if (Nerf.isArmed()) UI.holsterNerf();
     mode = m;
     Game.mode = m;
     UI.updateModeButton();
     UI.toast(m === "build" ? "🧱 Build mode — tap to place blocks!" : "⛏️ Mine mode — tap blocks to dig!", 1500);
   }
-  function toggleMode() { setMode(mode === "mine" ? "build" : "mine"); }
+  function toggleMode() {
+    if (Nerf.isArmed()) {
+      UI.holsterNerf();
+      mode = "mine";
+      Game.mode = "mine";
+      UI.updateModeButton();
+      UI.toast("🎯 Nerf gun away — tap blocks to dig!", 1800);
+      return;
+    }
+    setMode(mode === "mine" ? "build" : "mine");
+  }
 
   /* ---------------- day/night ---------------- */
   var skyDay = new THREE.Color(), skyCur = new THREE.Color();
@@ -456,6 +475,7 @@ var Game = (function () {
     Player.update(dt);
     NPCs.update(dt, Player.position);
     Animals.update(dt, Player.position);
+    Nerf.update(dt);
     updateDayNight();
     maybeWordStorm();
 

@@ -64,11 +64,13 @@ var UI = (function () {
   var selectedIndex = -1;
   function hotbarItems() {
     var inv = Save.data.player.inventory;
+    var tools = [];
+    if (Save.data.player.tools && Save.data.player.tools.nerf) tools.push("nerf");
     var hand = ["bucket", "water bucket"].filter(function (k) { return (inv[k] || 0) > 0; });
     var placeable = Object.keys(inv).filter(function (k) {
       return inv[k] > 0 && ITEM_TO_BLOCK[k] !== undefined && hand.indexOf(k) < 0;
     });
-    return hand.concat(placeable).slice(0, 8);
+    return tools.concat(hand).concat(placeable).slice(0, 8);
   }
 
   function updateHotbar() {
@@ -80,7 +82,9 @@ var UI = (function () {
       var slot = document.createElement("div");
       slot.className = "slot" + (i === selectedIndex ? " selected" : "");
       slot.innerHTML = "<span class='slot-icon'>" + (ITEM_ICON[item] || "⬜") +
-        "</span><span class='slot-count'>" + inv[item] + "</span>";
+        "</span><span class='slot-count'>" +
+        (item === "nerf" ? (Nerf.ammo() + "/" + Nerf.drumSize()) : inv[item]) +
+        "</span>";
       slot.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
         selectHotbar(i);
@@ -94,10 +98,22 @@ var UI = (function () {
   function selectHotbar(i) {
     var items = hotbarItems();
     if (i < 0 || i >= items.length) return;
+    if (i === selectedIndex && items[i] === "nerf") {
+      holsterNerf();
+      toast("🎯 Nerf gun holstered. Tap ⛏️ to mine!");
+      return;
+    }
     selectedIndex = i;
     Game.selectedItem = items[i];
-    if (Game.mode !== "build") Game.setMode("build");
+    if (items[i] === "nerf") {
+      Nerf.equip();
+      toast("🎯 Nerf gun out! Tap to shoot foam darts. Nobody gets hurt.", 2800);
+    } else {
+      Nerf.unequip();
+      if (Game.mode !== "build") Game.setMode("build");
+    }
     updateHotbar();
+    updateModeButton();
   }
 
   function selectedItem() {
@@ -105,7 +121,20 @@ var UI = (function () {
     return selectedIndex >= 0 && selectedIndex < items.length ? items[selectedIndex] : null;
   }
 
+  function holsterNerf() {
+    selectedIndex = -1;
+    Game.selectedItem = null;
+    Nerf.unequip();
+    updateHotbar();
+    updateModeButton();
+  }
+
   function updateModeButton() {
+    if (Nerf.isArmed()) {
+      $("btn-mode").textContent = "🎯";
+      $("btn-mode").classList.toggle("build", false);
+      return;
+    }
     $("btn-mode").textContent = Game.mode === "mine" ? "⛏️" : "🧱";
     $("btn-mode").classList.toggle("build", Game.mode === "build");
   }
@@ -135,6 +164,7 @@ var UI = (function () {
       (p.tools.shovel ? "<span class='inv-tool'>🥄 Shovel</span>" : "") +
       (p.tools.axe ? "<span class='inv-tool'>🪓 Axe</span>" : "") +
       (p.tools.shears ? "<span class='inv-tool'>✂️ Shears</span>" : "") +
+      (p.tools.nerf ? "<button class='inv-tool inv-equip' data-equip='nerf'>🎯 Nerf gun</button>" : "") +
       (p.tools.furnace ? "<button class='inv-tool legendary inv-station'>🔥 Magic Furnace</button>" : "") +
       (p.tools.lantern ? "<button class='inv-tool legendary inv-station'>🕯️ Lantern Kit</button>" : "") +
       "</div>";
@@ -148,6 +178,15 @@ var UI = (function () {
       "<button class='big-btn' id='inv-close'>BACK TO THE GAME</button>"
     );
     $("inv-close").addEventListener("pointerdown", closeOverlay);
+    document.querySelectorAll(".inv-equip").forEach(function (b) {
+      b.addEventListener("pointerdown", function (e) {
+        e.stopPropagation();
+        closeOverlay();
+        var items = hotbarItems();
+        var idx = items.indexOf("nerf");
+        if (idx >= 0) selectHotbar(idx);
+      });
+    });
     document.querySelectorAll(".inv-station").forEach(function (b) {
       b.addEventListener("pointerdown", function (e) {
         e.stopPropagation();
@@ -165,6 +204,12 @@ var UI = (function () {
             var idxB = hotbarItems().indexOf(item);
             if (idxB >= 0) selectHotbar(idxB);
             toast(item === "bucket" ? "🪣 Tap a water block to fill it!" : "💧 Tap to pour a pool!");
+            return;
+          }
+          if (item === "nerf") {
+            closeOverlay();
+            var idxN = hotbarItems().indexOf("nerf");
+            if (idxN >= 0) selectHotbar(idxN);
             return;
           }
           GameAudio.sfx.pop();
@@ -215,6 +260,9 @@ var UI = (function () {
       needs: { stone: 3, sticks: 2 }, blurb: "Chops wood and leaves extra fast!" },
     { id: "shears", kind: "tool", tool: "shears", name: "shears", icon: "✂️",
       needs: { iron: 2 }, blurb: "Tap sheep for wool — they keep hopping around!" },
+    { id: "nerf", kind: "tool", tool: "nerf", name: "Nerf gun", icon: "🎯",
+      needs: { planks: 6, sticks: 4, wool: 2 },
+      blurb: "25-dart drum mag. Foam darts stun animals — people just say Ouch!" },
     { id: "bucket", kind: "tool", name: "bucket", icon: "🪣",
       needs: { iron: 3 }, gives: { bucket: 1 }, blurb: "Scoop water, then pour a pool anywhere!" }
   ];
@@ -426,6 +474,10 @@ var UI = (function () {
         GameAudio.say("You crafted a " + r.name + "!");
         toast(r.icon + " You crafted a " + r.name + "! " + (r.blurb || ""), 3200);
         updateHotbar();
+        if (r.tool === "nerf") {
+          var idxNerf = hotbarItems().indexOf("nerf");
+          if (idxNerf >= 0) selectHotbar(idxNerf);
+        }
       });
       return;
     }
@@ -1327,7 +1379,7 @@ var UI = (function () {
   return {
     init: init, toast: toast, updateHud: updateHud, updateHotbar: updateHotbar,
     updateQuestHud: updateQuestHud, updateModeButton: updateModeButton,
-    selectHotbar: selectHotbar, selectedItem: selectedItem,
+    selectHotbar: selectHotbar, selectedItem: selectedItem, holsterNerf: holsterNerf,
     showChallenge: showChallenge, presentChallenge: presentChallenge, showDialogue: showDialogue,
     showInventory: showInventory, toggleInventory: toggleInventory,
     showLevelUp: showLevelUp, showPause: showPause, showHome: showHome, hideHome: hideHome,
