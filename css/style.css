@@ -59,6 +59,12 @@ html, body {
   background: rgba(0,0,0,.25); color: #fff; border: 2px solid rgba(255,255,255,.4);
   border-radius: 8px; cursor: pointer;
 }
+#home-version {
+  position: absolute; bottom: 14px; left: 14px;
+  font-size: 9px; color: #fff; opacity: .75;
+  text-shadow: 1px 1px 0 rgba(0,0,0,.45);
+  pointer-events: none;
+}
 
 /* ---------------- HUD ---------------- */
 #hud { display: none; }
