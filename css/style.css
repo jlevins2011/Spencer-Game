@@ -179,6 +179,17 @@ html, body {
   font-size: 9px; color: #fff; text-shadow: 1px 1px 0 #000;
 }
 
+#nerf-ammo {
+  left: 50%; bottom: calc(env(safe-area-inset-bottom, 10px) + 72px);
+  transform: translateX(-50%);
+  display: none;
+  background: rgba(242, 124, 33, .92); color: #fff;
+  font-size: 11px; padding: 8px 14px; border-radius: 10px;
+  border: 3px solid #b85a12; pointer-events: none;
+  text-shadow: 1px 1px 0 #7a3a0a;
+}
+#nerf-ammo.show { display: block; }
+
 /* ---------------- overlays ---------------- */
 #overlay {
   position: fixed; inset: 0; z-index: 60;

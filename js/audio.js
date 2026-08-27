@@ -225,7 +225,13 @@ var GameAudio = (function () {
     bark:    function () { tone(360, 0.07, "sawtooth", 0.16); tone(250, 0.09, "sawtooth", 0.13, 0.09); tone(340, 0.07, "sawtooth", 0.15, 0.22); },
     squeak:  function () { tone(620, 0.07, "square", 0.12); tone(840, 0.09, "square", 0.10, 0.06); },
     storm:   function () { tone(120, 0.3, "sawtooth", 0.12); tone(90, 0.4, "sawtooth", 0.10, 0.15); tone(150, 0.25, "sawtooth", 0.08, 0.3); },
-    step:    function () { tone(90 + Math.random() * 30, 0.04, "square", 0.03); }
+    step:    function () { tone(90 + Math.random() * 30, 0.04, "square", 0.03); },
+    thwip:   function () { tone(520, 0.04, "square", 0.10); tone(180, 0.06, "triangle", 0.08, 0.03); },
+    reload:  function () {
+      tone(240, 0.05, "square", 0.08);
+      tone(280, 0.05, "square", 0.08, 0.08);
+      tone(200, 0.08, "triangle", 0.07, 0.16);
+    }
   };
 
   return {

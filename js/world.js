@@ -107,7 +107,8 @@ var ITEM_ICON = {
   "cooked meat": "🍗",
   asphalt: "⬛", concrete: "⬜", "yellow paint": "🟨", "white paint": "⬜",
   sticks: "🥢", door: "🚪", ladder: "🪜", fence: "🚧", bed: "🛏️",
-  "red wool": "🟥", bucket: "🪣", "water bucket": "💧", "crafting table": "🪚"
+  "red wool": "🟥", bucket: "🪣", "water bucket": "💧", "crafting table": "🪚",
+  nerf: "🎯"
 };
 
 /* ---------------- world definitions ---------------- */

@@ -2,7 +2,8 @@
 /* ============================================================
    ANIMALS — pigs, cows, chickens, and sheep wander every world.
    Tap to bop them (they squeal and flee); a few bops and they
-   poof into meat or wool. They repopulate over time. They never
+   poof into meat or wool. Foam darts from the Nerf gun only stun
+   them — they never lose HP or drop loot that way. They repopulate over time. They never
    fight back (peaceful mode).
    ============================================================ */
 var Animals = (function () {
@@ -128,6 +129,10 @@ var Animals = (function () {
     var now = performance.now();
     animals.forEach(function (a) {
       var g = a.group;
+      var stunned = a.stunUntil && now < a.stunUntil;
+      var wantRoll = stunned ? 1.15 : 0;
+      g.rotation.z += (wantRoll - g.rotation.z) * Math.min(1, dt * 6);
+      if (stunned) return;
       var fleeing = now < a.fleeUntil;
       a.moveT -= dt;
       if (a.moveT <= 0 && !fleeing) {
@@ -153,6 +158,15 @@ var Animals = (function () {
       }
       g.rotation.y += (a.faceYaw - g.rotation.y) * Math.min(1, dt * 8);
     });
+  }
+
+  // Foam dart: freeze in a silly tipped-over pose. Never loses HP, never drops loot.
+  function stun(a, ms) {
+    if (!a) return;
+    a.stunUntil = performance.now() + (ms || 7000);
+    a.target = null;
+    GameAudio.sfx.squeak();
+    UI.toast(a.def.emoji + " Bonk! Stunned — they're okay!", 2200);
   }
 
   // returns true if the tap was handled (an animal got bopped)
@@ -206,5 +220,5 @@ var Animals = (function () {
 
   function hitboxes() { return animals.map(function (a) { return a.hitbox; }); }
 
-  return { init: init, populate: populate, update: update, hit: hit, hitboxes: hitboxes };
+  return { init: init, populate: populate, update: update, hit: hit, stun: stun, hitboxes: hitboxes };
 })();

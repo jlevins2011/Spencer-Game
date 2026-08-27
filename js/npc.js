@@ -220,10 +220,57 @@ var NPCs = (function () {
     n.group.position.set(x, y, z);
   }
 
+  function ouchBubble(text) {
+    var c = document.createElement("canvas");
+    c.width = 256; c.height = 64;
+    var g = c.getContext("2d");
+    g.fillStyle = "rgba(255,255,255,0.92)";
+    g.fillRect(8, 8, 240, 48);
+    g.strokeStyle = "#c0392b";
+    g.lineWidth = 4;
+    g.strokeRect(8, 8, 240, 48);
+    g.fillStyle = "#c0392b";
+    g.font = "bold 28px monospace";
+    g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(text, 128, 34);
+    var t = new THREE.CanvasTexture(c);
+    var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false }));
+    s.scale.set(1.5, 0.38, 1);
+    return s;
+  }
+
+  function ouch(n) {
+    if (!n) return;
+    var line = n.def.dog ? "Yip! Ouch!" :
+      n.def.daddy ? "Ouch! Hey!" :
+      n.def.mommy ? "Ouch!" :
+      "Ouch!";
+    n.ouchUntil = performance.now() + 1200;
+    GameAudio.say(line, 1.05);
+    UI.toast((n.def.dog ? "🐶 " : "") + n.def.name + ": " + line, 2000);
+    if (n.ouchSprite) n.group.remove(n.ouchSprite);
+    var bubble = ouchBubble(line);
+    bubble.position.set(0, n.def.dog ? 1.15 : (n.def.daddy ? 2.55 : 2.2), 0);
+    n.group.add(bubble);
+    n.ouchSprite = bubble;
+    setTimeout(function () {
+      if (n.ouchSprite === bubble) {
+        n.group.remove(bubble);
+        n.ouchSprite = null;
+      }
+    }, 1400);
+  }
+
   function update(dt, playerPos) {
     var t = performance.now() / 1000;
+    var now = performance.now();
     npcs.forEach(function (n, i) {
       var g = n.group;
+      if (n.ouchUntil && now < n.ouchUntil) {
+        g.rotation.z = Math.sin(now / 40) * 0.12;
+      } else if (g.rotation.z) {
+        g.rotation.z += (0 - g.rotation.z) * Math.min(1, dt * 8);
+      }
       var d = playerPos.distanceTo(g.position);
       if (d < 6) {
         // face the player
@@ -273,7 +320,7 @@ var NPCs = (function () {
   }
 
   return { init: init, placeAll: placeAll, update: update, hitboxes: hitboxes,
-           getDog: getDog, positionDogNear: positionDogNear };
+           getDog: getDog, positionDogNear: positionDogNear, ouch: ouch };
 })();
 
 
