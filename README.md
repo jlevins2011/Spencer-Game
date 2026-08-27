@@ -107,7 +107,7 @@ Notes:
 
 ## For tweakers
 
-- `js/config.js` — player profiles (`age` / `readAloud` control whether conversations auto-read), helpers, difficulty pacing, report settings
+- `js/config.js` — **VERSION** (title-screen build number — bump on every iPad ship), player profiles (`age` / `readAloud` control whether conversations auto-read), helpers, difficulty pacing, report settings
 - `js/curriculum.js` — Spencer's reading words, sentences, and the quests
 - `js/spelling.js` — Penelope's spelling lists (swap in school lists here!)
 - `js/latin.js` — Olivia's Kraken Latin 1 vocabulary (units 1–4)

@@ -4,6 +4,9 @@
    Everything a parent might want to tweak lives here.
    ============================================================ */
 var CONFIG = {
+  // Bump this on every change that ships to the iPads.
+  // It shows on the title screen so we can see which build the kids have.
+  VERSION: "16",
   // The kids. Each gets their own save, learning module, difficulty
   // and weekly report. Their siblings appear as in-game helpers.
   PLAYERS: [

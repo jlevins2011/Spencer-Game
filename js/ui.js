@@ -1318,6 +1318,8 @@ var UI = (function () {
     $("home").style.display = "flex";
     $("hud").style.display = "none";
     Controls.setEnabled(false);
+    var ver = $("home-version");
+    if (ver) ver.textContent = "v" + CONFIG.VERSION;
     renderPlayerButtons();
   }
   function hideHome() {
